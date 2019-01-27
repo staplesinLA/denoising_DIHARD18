@@ -15,7 +15,7 @@ Also, it integrates a vad interface using python-webrtcvad.
  
 **How to use it ?**<br> 
 1. Install prerequisites.
-2. Make sure the file completeness of big model file ("model/speech_enhancement.model"). Users can use "git lfs clone", or directly download it via web.
+2. Make sure the file completeness of big model file ("model/speech_enhancement.model"). It's recommended to use "git lfs clone", or directly download it via web.
 3. Specify necessary parameters in **run_eval.sh**, such as data dictionaries, GPU id and so on.
 4. Direct run it: "sh run_eval.sh".
 
