@@ -11,7 +11,7 @@ import sys
 
 GPU_id = int(sys.argv[1])
 try_set_default_device(gpu(GPU_id))
-model_dnn= load_model("./model/speech_enhancement.model")
+model_dnn= load_model("./model/speech_enhancment.model")
 features_file = "./test_normed.scp" 
 feature_dim = 257
 test_reader = MinibatchSource(HTKFeatureDeserializer(StreamDefs(

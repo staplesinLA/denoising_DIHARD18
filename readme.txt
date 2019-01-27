@@ -1,0 +1,1 @@
+directly run.sh, specify original wav root and enhanced output root.
