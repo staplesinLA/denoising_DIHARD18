@@ -15,8 +15,9 @@ Also, it integrates a vad interface using python-webrtcvad.
  
 **How to use it ?**<br> 
 1. Install prerequisites.
-2. Specify necessary parameters in **run_eval.sh**, such as data dictionaries, GPU id and so on.
-3. Direct run it.
+2. Make sure the file completeness of big model file ("model/speech_enhancement.model"). Users can use "git lfs clone", or directly download it via web.
+3. Specify necessary parameters in **run_eval.sh**, such as data dictionaries, GPU id and so on.
+4. Direct run it: "sh run_eval.sh".
 
 **Details**<br> 
 1. Speech enhancement model<br> 
@@ -41,5 +42,6 @@ And the performance on evaluation set goes to:<br>
 | Total | 23.85| 15.29|
 
 
-   The effectiveness of a sub-module to the final performance speaker diarization is too trivial to analysis. However, it's clear that the enhancement based pre-processing is beneficial to VAD performance. Users can also tune the default VAD parameters to get a desired trade-off bettwen Miss and False Alarm.
+3. Effectiveness
+The effectiveness of a sub-module to the final performance speaker diarization is too trivial to analysis. However, it's clear that the enhancement based pre-processing is beneficial to VAD performance. Users can also tune the default VAD parameters to get a desired trade-off bettwen Miss and False Alarm.
 
