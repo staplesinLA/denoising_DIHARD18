@@ -10,7 +10,7 @@ output_dir=/disk1/leisun/data/LDC2018E32_First_DIHARD_Challenge_Evaluation_Data_
 ##### --output_dir: specify the output dictionary
 ##### --gpu_id : indicate which GPU to use
 ##### --truncate_minutes: how many minutes per chunk
-python main_denoising_all_py.py --wav_dir  $dihard_wav_dir  --output_dir $output_dir --gpu_id  2  --truncate_minutes 5
+python main_denoising.py --wav_dir  $dihard_wav_dir  --output_dir $output_dir --gpu_id  2  --truncate_minutes 5
 
 ## Get the vad information of all wave file from a specified dictionary
 #---- Parmeters:

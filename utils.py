@@ -1,4 +1,3 @@
-#import numpy
 import struct
 import scipy.io.wavfile
 import os
@@ -9,7 +8,7 @@ from librosa.core import resample
 from librosa.util import frame
 from librosa import load
 import pdb  
-#from fileutils import smart_open
+
 
 def stft(x, window, nperseg=512, noverlap=256):
     if len(window) != nperseg:
@@ -96,6 +95,7 @@ def writeHtk(filename, feature, sampPeriod, parmKind):
 def vad(data, fs, fs_vad=16000, hoplength=30, vad_mode=0):
     """ Voice activity detection.
     This was implementioned for easier use of py-webrtcvad.
+    Thanks to: https://github.com/wiseman/py-webrtcvad.git
     Parameters
     ----------
     data : ndarray
