@@ -17,3 +17,29 @@ Also, it integrates a vad interface using python-webrtcvad.
 1. Install prerequisites.
 2. Specify necessary parameters in **run_eval.sh**, such as data dictionaries, GPU id and so on.
 3. Direct run it.
+
+**Details**<br> 
+1. Speech enhancement model<br> 
+The scripts accept 16K, 16-bit mono audios. Please convert the audio format in advance. To easily reconsturct the waveform, the input feature is log-power specturm(LPS). For the dual outputs including "IRM" and "LPS", the final used component is the "IRM" target which applys a mask on original speech and yields better speech intelligibility and less distortions.
+
+2. Vad module<br> 
+The optional parameters of webrtcvad are aggressiveness mode (default:3) and hop length (default:30). The default settings are tuned on the development set of the first DIHARD challenge. 
+For the development set:
+
+| VAD(default) | Original_Dev| Processed_Dev |
+| ------ | ------ | ------ |
+| Miss | 11.85 | 7.21 |
+| FA | 6.12 | 6.17 |
+| Total | 17.97| 13.38|
+
+And the performance on evaluation set goes to:<br> 
+
+| VAD(default) | Original_Eval | Processed_Eval |
+| ------ | ------ | ------ |
+| Miss | 17.49 | 8.89 |
+| FA | 6.36 | 6.4|
+| Total | 23.85| 15.29|
+
+
+   The effectiveness of a sub-module to the final performance speaker diarization is too trivial to analysis. However, it's clear that the enhancement based pre-processing is beneficial to VAD performance. Users can also tune the default VAD parameters to get a desired trade-off bettwen Miss and False Alarm.
+
