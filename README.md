@@ -1,6 +1,6 @@
 A quick-use package of speech enhancement model in our DIHARD18 system:
 ----
-The repository contains python tools of our speech denoising model in our DIHARD18 system. The model is trained with 400-hour mixing
+The repository contains python tools for our speech denoising model in our DIHARD18 system. The model is trained with 400-hour mixing
 data of both English and Chinese. The model architecture is presented in [Paper](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf):Speaker Diarization with Enhancing Speech for the First DIHARD Challenge,
 which combine previous techniques of [PL](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8461861) and [MTL](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf).<br> 
 
@@ -21,7 +21,7 @@ Also, it integrates a vad interface using python-webrtcvad.
 
 **Details**<br> 
 1. Speech enhancement model<br> 
-The scripts accept 16K, 16-bit mono audios. Please convert the audio format in advance. To easily reconsturct the waveform, the input feature is log-power specturm(LPS). For the dual outputs including "IRM" and "LPS", the final used component is the "IRM" target which applys a mask on original speech and yields better speech intelligibility and less distortions.
+The scripts accept 16K, 16-bit mono audios. Please convert the audio format in advance. To easily reconstruct the waveform, the input feature is log-power spectrum(LPS). For dual outputs including "IRM" and "LPS", the final used component is the "IRM" target which applys a mask on original speech and yields better speech intelligibility and fewer distortions.
 
 2. Vad module<br> 
 The optional parameters of webrtcvad are aggressiveness mode (default:3) and hop length (default:30). The default settings are tuned on the development set of the first DIHARD challenge. 
@@ -43,5 +43,5 @@ And the performance on evaluation set goes to:<br>
 
 
 3. Effectiveness
-The effectiveness of a sub-module to the final performance speaker diarization is too trivial to analysis. However, it's clear that the enhancement based pre-processing is beneficial to VAD performance. Users can also tune the default VAD parameters to get a desired trade-off bettwen Miss and False Alarm.
+The effectiveness of a sub-module to the final performance speaker diarization is too trivial to analysis. However, it's clear that the enhancement based pre-processing is beneficial to VAD performance. Users can also tune the default VAD parameters to get a desired trade-off between Miss and False Alarm.
 
