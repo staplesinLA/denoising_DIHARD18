@@ -21,11 +21,11 @@ Also, it integrates a vad interface using python-webrtcvad.
 
 **Details**<br> 
 1. Speech enhancement model<br> 
-The scripts accept 16K, 16-bit mono audios. Please convert the audio format in advance. To easily reconstruct the waveform, the input feature is log-power spectrum(LPS). For dual outputs including "IRM" and "LPS", the final used component is the "IRM" target which applys a mask on original speech and yields better speech intelligibility and fewer distortions.
+The scripts accept 16K, 16-bit mono audios. Please convert the audio format in advance. To easily rebuild the waveform, the input feature is log-power spectrum(LPS). As the model has dual outputs including "IRM" and "LPS", the final used component is the "IRM" target which directly applys a mask on the original speech. Compared with "LPS" output, it can yield better speech intelligibility and fewer distortions.
 
 2. Vad module<br> 
-The optional parameters of webrtcvad are aggressiveness mode (default:3) and hop length (default:30). The default settings are tuned on the development set of the first DIHARD challenge. 
-For the development set:
+The optional parameters of webrtcvad are aggressiveness mode (default=3) and hop length (default=30). The default settings are tuned on the development set of the first DIHARD challenge. 
+For the development set, here is the comparison between original speech and processed speech in terms of VAD metrics:
 
 | VAD(default) | Original_Dev| Processed_Dev |
 | ------ | ------ | ------ |
@@ -42,6 +42,6 @@ And the performance on evaluation set goes to:<br>
 | Total | 23.85| 15.29|
 
 
-3. Effectiveness
-The effectiveness of a sub-module to the final performance speaker diarization is too trivial to analysis. However, it's clear that the enhancement based pre-processing is beneficial to VAD performance. Users can also tune the default VAD parameters to get a desired trade-off between Miss and False Alarm.
+3. Effectiveness<br>
+The effectiveness of a sub-module to the final speaker diarization performance is too trivial to analysis. However, it can be seen clearly that the enhancement based pre-processing is beneficial to at least VAD performance. Users can also tune the default VAD parameters to obtain a desired trade-off between Miss and False Alarm.
 
