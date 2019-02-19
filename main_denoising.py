@@ -8,8 +8,11 @@ import utils
 import pdb
 import argparse
 import sys
+from utils import str2bool
 
-def main_denoising(wav_dir ,out_dir, gpu_id , truncate_minutes):
+print("The script only supports 16K mono speech!\n")
+
+def main_denoising(wav_dir ,out_dir, use_gpu, gpu_id , truncate_minutes):
     
     if not os.path.exists(wav_dir):   
         raise RuntimeError("cannot locate the original dictionary !")
@@ -77,7 +80,10 @@ def main_denoising(wav_dir ,out_dir, gpu_id , truncate_minutes):
                 flist.close()
                 
                 # Start CNTK model-decoding 
-                os.system('python decode_model.py  %d ' %(gpu_id))                
+                if str2bool(use_gpu):
+                    os.system('python decode_model_gpu.py  %d ' %(gpu_id))
+                else: 
+                    os.system('python decode_model_cpu.py  %d ' %(gpu_id))                
                 
                 # Read decoded data
                 SE_mat=sio.loadmat('enhanced_norm_fea_mat/test.normedlsp.mat')
@@ -103,11 +109,12 @@ def main_denoising(wav_dir ,out_dir, gpu_id , truncate_minutes):
 parser = argparse.ArgumentParser(description='Decoding parameters of speech denosing model')
 parser.add_argument('--wav_dir',type=str, default=None)
 parser.add_argument('--output_dir',type= str, default=None)
+parser.add_argument('--use_gpu',type=str, default=None)
 parser.add_argument('--gpu_id', type=int, default = 0)
 parser.add_argument('--truncate_minutes', type=int, default = 10)
 args = parser.parse_args()
 
-main_denoising(wav_dir = args.wav_dir, out_dir = args.output_dir, gpu_id = args.gpu_id, truncate_minutes= args.truncate_minutes)
+main_denoising(wav_dir = args.wav_dir, out_dir = args.output_dir, use_gpu = args.use_gpu, gpu_id = args.gpu_id, truncate_minutes= args.truncate_minutes)
 
 
 
