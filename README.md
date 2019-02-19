@@ -19,10 +19,43 @@ Additionally, this package also integrates a VAD module based on ‘py-webrtcvad
 [Librosa](https://github.com/librosa/librosa)<br> 
  
 **How to use it ?**<br> 
-1. Install prerequisites.
-2. Make sure the file completeness of big model file ("model/speech_enhancement.model"). It's recommended to use "git lfs clone", or directly download it via web.
-3. Specify necessary parameters in **run_eval.sh**, such as data dictionaries, GPU id and so on.
-4. Direct run it: "sh run_eval.sh".
+1. Download the speech enhancement repository :
+``````
+ git lfs clone https://github.com/staplesinLA/denoising_DIHARD18.git
+``````
+2. Install all dependencies (Note that you need to have Python and pip already installed on your system) :
+``````
+ pip install numpy  scipy librosa
+ sudo apt-get install openmpi-bin
+ pip install cntk-gpu
+ pip install webrtcvad
+``````
+3. Move to the dictionary :
+``````
+ cd ./denoising_DIHARD18
+``````
+4. Specify parameters in run_eval.sh :
+  
+   For speech enhancement tools:
+``````   
+dihard_wav_dir=<path to original wavs> 
+output_dir=<path to output dir>
+--use_gpu: <whether using GPU, if False, it will choose CPU>
+--gpu_id : <GPU id in your machine, default=0>
+--truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5, it will take no more than 4G GPU memory >
+``````
+
+   For VAD tools:
+``````
+-- wav_dir :  <path to output dir>
+-- mode : <GPU id in your machine, default=0>
+-- hoplength : <GPU id in your machine, default=0>
+``````
+
+5. Execute run_eval.sh :
+``````   
+./run_eval.sh
+``````
 
 **Details**<br> 
 1. Speech enhancement model<br> 
