@@ -48,7 +48,8 @@ Additionally, this package also integrates a VAD module based on ‘py-webrtcvad
  --gpu_id : <GPU id in your machine, default=0>
  --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5, it will take no more than 4G GPU memory >
 ``````
-  
+  It's recommended to use GPU for decoding, because it's much faster than CPU. If 'CUDA Error: out of memory' happens, please turn down the truncate_minutes.
+
 * For VAD tools:
 ``````
  -- wav_dir :  <path to output dir>
