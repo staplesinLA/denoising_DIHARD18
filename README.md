@@ -1,10 +1,15 @@
 A quick-use package of speech enhancement model in our DIHARD18 system:
 ----
-The repository contains python tools for our speech denoising model in our DIHARD18 system. The model is trained with 400-hour mixing
-data of both English and Chinese. The model architecture is presented in [Paper](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf):Speaker Diarization with Enhancing Speech for the First DIHARD Challenge,
-which combine previous techniques of [PL](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8461861) and [MTL](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf).<br> 
+The repository provides tools to reproduce the enhancement results of the speech preprocessing part in our DIHARD18 system[1]. The deep-learning based denoising model is trained with 400-hour mixing data of both English and Mandarin. The model details can be found in [1,2,3]. Currently the tools accept 16K, 16-bit mono audios, please convert the audio format in advance.
 
-Also, it integrates a vad interface using python-webrtcvad.
+Additionally, this package also integrates a VAD module based on ‘py-webrtcvad’ which provides a python interface to the WebRTC Voice Activity Detector (VAD). The default parameters are tuned on the development set of DIHARD18.
+
+[1]Sun, Lei, et al. "Speaker Diarization with Enhancing Speech for the First DIHARD Challenge." Proc. Interspeech 2018 (2018): 2793-2797.[PDF](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf)
+
+[2]Gao, Tian, et al. "Densely connected progressive learning for lstm-based speech enhancement." 2018 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). IEEE, 2018. [PDF](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8461861)
+
+[3]Sun, Lei, et al. "Multiple-target deep learning for LSTM-RNN based speech enhancement." 2017 Hands-free Speech Communications and Microphone Arrays (HSCMA). IEEE, 2017.[PDF](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf)
+
 
 **Main Prerequisites:**<br>
 >[CNTK](https://docs.microsoft.com/en-us/cognitive-toolkit/setup-linux-python?tabs=cntkpy26): python version<br> 
