@@ -9,20 +9,21 @@ import utils
 import pdb
 import argparse
 import sys
+from utils import str2bool
 
 from decode_model import decode_model
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-def main_denoising(wav_dir ,out_dir, gpu_id , truncate_minutes):
-
+def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
     if not os.path.exists(wav_dir):
         raise RuntimeError(
             "cannot locate the original dictionary: %s" % wav_dir)
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+
     # print "Since the some clips in DHAHRD are long, it's better to
     # split the long sentences to several sub-clips, in case of
     # causing GPU memory problem during LSTM inference.\n "
@@ -86,7 +87,7 @@ def main_denoising(wav_dir ,out_dir, gpu_id , truncate_minutes):
                 flist.close()
 
                 # Start CNTK model-decoding
-                decode_model(gpu_id)
+                decode_model(use_gpu, gpu_id)
 
                 # Read decoded data
                 SE_mat=sio.loadmat('enhanced_norm_fea_mat/test.normedlsp.mat')
@@ -111,9 +112,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Decoding parameters of speech denosing model')
     parser.add_argument('--wav_dir',type=str, default=None)
     parser.add_argument('--output_dir',type= str, default=None)
+    parser.add_argument('--use_gpu',type=str, default=None)
     parser.add_argument('--gpu_id', type=int, default = 0)
     parser.add_argument('--truncate_minutes', type=int, default = 10)
     args = parser.parse_args()
 
     main_denoising(wav_dir = args.wav_dir, out_dir = args.output_dir,
-                   gpu_id = args.gpu_id, truncate_minutes= args.truncate_minutes)
+                   use_gpu = args.use_gpu, gpu_id = args.gpu_id,
+                   truncate_minutes= args.truncate_minutes)

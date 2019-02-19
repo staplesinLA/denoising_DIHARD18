@@ -10,8 +10,8 @@ import os
 import sys
 
 
-def decode_model(gpu_id):
-    try_set_default_device(gpu(gpu_id))
+def decode_model(use_gpu=True, gpu_id=0):
+    try_set_default_device(gpu(gpu_id) if use_gpu else cpu())
     model_dnn = load_model("./model/speech_enhancement.model")
     features_file = "./test_normed.scp"
     feature_dim = 257
