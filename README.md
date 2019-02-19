@@ -88,28 +88,27 @@ Microphone Arrays (HSCMA). IEEE,
 ### Use within docker
 
 1. Install [docker](https://docs.docker.com/install/linux/docker-ee/ubuntu)
+
 2. Install [nvidia docker](https://github.com/nvidia/nvidia-docker), a
    plugin to use your GPUs within docker
-3. Pull the docker image: ``docker pull XXX/XXX:latest``
-4. Run the evaluation script with the following command:
 
-        docker run --rm --runtime=nvidia -v /absolute/path/to/dihard/data:/data XXX/XXX \
-            /bin/bash -c "source activate dihard18 && ./run_eval.sh"
-
-   * The option ``--runtime=nvidia`` enables the use of GPUs within docker
-   * The option ``-v /absolute/path/to/dihard/data:/data`` mounts the
-     folder where are stored the data into docker in the ``/data``
-     folder. The directory ``/absolute/path/to/dihard/data`` must
-     contains a ``wav`` subdirectory. The results will be stored on
-     the subfolder ``wav_pn_enhanced``.
-
-5. (optional) Instead of pull the image from docker hub, you can build
-   the image using the provided ``Dockerfile``:
+3. Build the image using the provided ``Dockerfile``:
 
         docker build -t dihard18 .
 
-    Once the image is built, launch the command in step 4, replacing
-    ``XXX/XXX`` by ``dihard18``.
+4. Run the evaluation script within docker with the following commands:
+
+        docker run -it --rm --runtime=nvidia -v /abs/path/to/dihard/data:/data dihard18 /bin/bash
+        # you are now in the docker machine
+        ./run_eval.sh  # before launcing the script you can edit it to modify the parameters
+
+   * The option ``--runtime=nvidia`` enables the use of GPUs within docker
+
+   * The option ``-v /absolute/path/to/dihard/data:/data`` mounts the
+     folder where are stored the data into docker in the ``/data``
+     folder. The directory ``/absolute/path/to/dihard/data`` **must
+     contain** a ``wav`` subdirectory. The results will be stored on
+     the subfolder ``wav_pn_enhanced``.
 
 
 ## Details

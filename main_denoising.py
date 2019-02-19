@@ -9,7 +9,6 @@ import utils
 import pdb
 import argparse
 import sys
-from utils import str2bool
 
 from decode_model import decode_model
 
@@ -87,7 +86,7 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
                 flist.close()
 
                 # Start CNTK model-decoding
-                decode_model(use_gpu, gpu_id)
+                decode_model(use_gpu=use_gpu, gpu_id=gpu_id)
 
                 # Read decoded data
                 SE_mat=sio.loadmat('enhanced_norm_fea_mat/test.normedlsp.mat')
@@ -110,13 +109,13 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Decoding parameters of speech denosing model')
-    parser.add_argument('--wav_dir',type=str, default=None)
-    parser.add_argument('--output_dir',type= str, default=None)
-    parser.add_argument('--use_gpu',type=str, default=None)
-    parser.add_argument('--gpu_id', type=int, default = 0)
-    parser.add_argument('--truncate_minutes', type=int, default = 10)
+    parser.add_argument('--wav_dir', type=str)
+    parser.add_argument('--output_dir', type= str)
+    parser.add_argument('--use_gpu', type=str, choices=['true', 'false'], default='true')
+    parser.add_argument('--gpu_id', type=int, default=0)
+    parser.add_argument('--truncate_minutes', type=int, default=10)
     args = parser.parse_args()
 
-    main_denoising(wav_dir = args.wav_dir, out_dir = args.output_dir,
-                   use_gpu = args.use_gpu, gpu_id = args.gpu_id,
-                   truncate_minutes= args.truncate_minutes)
+    use_gpu = False if args.use_gpu == 'false' else True
+    main_denoising(args.wav_dir, args.output_dir, use_gpu,
+                   args.gpu_id, args.truncate_minutes)

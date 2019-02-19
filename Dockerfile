@@ -2,8 +2,8 @@
 # Ubuntu-16.04)
 FROM microsoft/cntk:2.6-gpu-python3.5-cuda9.0-cudnn7.0
 
-# Update the Ubuntu distribution
-RUN apt update && apt upgrade -y
+# Update the Ubuntu distribution and install some text editors
+RUN apt update && apt upgrade -y && apt install -y nano vim
 
 # Add conda in the PATH and update it to the last version
 ENV PATH=/root/anaconda3/bin:$PATH
