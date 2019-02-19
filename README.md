@@ -40,7 +40,7 @@ Additionally, this package also integrates a VAD module based on ‘py-webrtcvad
 ``````
 4. Specify parameters in run_eval.sh :
   
-   For speech enhancement tools:
+* For speech enhancement tools:
 ``````   
  dihard_wav_dir=<path to original wavs> 
  output_dir=<path to output dir>
@@ -48,8 +48,8 @@ Additionally, this package also integrates a VAD module based on ‘py-webrtcvad
  --gpu_id : <GPU id in your machine, default=0>
  --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5, it will take no more than 4G GPU memory >
 ``````
-
-   For VAD tools:
+  
+* For VAD tools:
 ``````
  -- wav_dir :  <path to output dir>
  -- mode : <GPU id in your machine, default=0>
