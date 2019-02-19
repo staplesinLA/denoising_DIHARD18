@@ -16,7 +16,7 @@ output_dir=/data/wav_pn_enhanced/
 ##### --use_gpu: 'true' or 'false', using GPU on true, if false it will choose CPU
 ##### --gpu_id : choose which GPU card to use
 ##### --truncate_minutes: how many minutes per chunk. (turn it down when meets GPU memory deficiency )
-GPU_available=false
+GPU_available=true
 python main_denoising.py --wav_dir $dihard_wav_dir --output_dir $output_dir \
        --use_gpu $GPU_available --gpu_id 0  --truncate_minutes 10 || exit 1
 

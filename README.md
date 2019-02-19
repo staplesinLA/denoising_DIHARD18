@@ -67,7 +67,7 @@ Microphone Arrays (HSCMA). IEEE,
 
             dihard_wav_dir=<path to original wavs>
             output_dir=<path to output dir>
-            --use_gpu: <true|false, if false use CPU>
+            --use_gpu: <true|false, if false use CPU, default=true>
             --gpu_id : <GPU id in your machine, default=0>
             --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5,
                                  it will take no more than 4G GPU memory >
