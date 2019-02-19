@@ -30,6 +30,10 @@ Additionally, this package also integrates a VAD module based on ‘py-webrtcvad
  pip install cntk-gpu
  pip install webrtcvad
 ``````
+   Make sure you install the CNTK engine rightly by querying its version:
+``````
+ python -c "import cntk; print(cntk.__version__)"
+``````
 3. Move to the dictionary :
 ``````
  cd ./denoising_DIHARD18
@@ -38,23 +42,23 @@ Additionally, this package also integrates a VAD module based on ‘py-webrtcvad
   
    For speech enhancement tools:
 ``````   
-dihard_wav_dir=<path to original wavs> 
-output_dir=<path to output dir>
---use_gpu: <whether using GPU, if False, it will choose CPU>
---gpu_id : <GPU id in your machine, default=0>
---truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5, it will take no more than 4G GPU memory >
+ dihard_wav_dir=<path to original wavs> 
+ output_dir=<path to output dir>
+ --use_gpu: <whether using GPU, if False, it will choose CPU>
+ --gpu_id : <GPU id in your machine, default=0>
+ --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5, it will take no more than 4G GPU memory >
 ``````
 
    For VAD tools:
 ``````
--- wav_dir :  <path to output dir>
--- mode : <GPU id in your machine, default=0>
--- hoplength : <GPU id in your machine, default=0>
+ -- wav_dir :  <path to output dir>
+ -- mode : <GPU id in your machine, default=0>
+ -- hoplength : <GPU id in your machine, default=0>
 ``````
 
 5. Execute run_eval.sh :
 ``````   
-./run_eval.sh
+ ./run_eval.sh
 ``````
 
 **Details**<br> 
