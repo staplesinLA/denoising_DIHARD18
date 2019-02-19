@@ -67,9 +67,10 @@ Microphone Arrays (HSCMA). IEEE,
 
             dihard_wav_dir=<path to original wavs>
             output_dir=<path to output dir>
-            --use_gpu: <whether using GPU, if False, it will choose CPU>
+            --use_gpu: <true|false, if false use CPU>
             --gpu_id : <GPU id in your machine, default=0>
-            --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5, it will take no more than 4G GPU memory >
+            --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5,
+                                 it will take no more than 4G GPU memory >
 
       It's recommended to use GPU for decoding, because it's much
       faster than CPU. If 'CUDA Error: out of memory' happens, please
