@@ -41,7 +41,7 @@ def istft(x, window, nperseg=512, noverlap=256):
 
 def wav2logspec(x, window, nperseg=512, noverlap=256):
     y = stft(x, window, nperseg=nperseg, noverlap=noverlap)
-    return np.log(np.square(abs(y)))
+    return np.log(np.square(abs(y))+1e-8)
 
 
 def logspec2wav(lps, wave, window, nperseg=512, noverlap=256):
