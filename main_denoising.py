@@ -1,19 +1,20 @@
 # coding: utf-8
+import argparse
+import math
+from multiprocessing import Process
+import os
+import pdb
+import sys
 
 import numpy as np
 import scipy.io.wavfile as wav_io
 import scipy.io as sio
-import math
-import os
-import utils
-import pdb
-import argparse
-import sys
 
 from decode_model import decode_model
-
+import utils
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+
 
 def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
     if not os.path.exists(wav_dir):
@@ -61,7 +62,7 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
                     else:
                         temp = wav_data[((i-1)*chunk_length-1):(i*chunk_length-1)]
                 print("Current processing wav: %s, segment: %d/%d ."%(wav,i,total_chunks))
-
+                
                 if temp.shape[0] < 256: # if it's not enough for one half of frame
                     #pdb.set_trace()
                     data_se = temp # do not process
@@ -73,7 +74,7 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
                 enhanced_wav = 'temp_se.wav'
 
                 # extract lps feature from waveform
-                noisy_htkdata = utils.wav2logspec(temp,window=np.hamming(512)) ##!!!!!!!!!!!!
+                noisy_htkdata = utils.wav2logspec(temp, window=np.hamming(512)) ##!!!!!!!!!!!!
 
                 # Do MVN before decoding
                 normed_noisy = (noisy_htkdata-mean)/var
@@ -86,7 +87,9 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
                 flist.close()
 
                 # Start CNTK model-decoding
-                decode_model(use_gpu=use_gpu, gpu_id=gpu_id)
+                p = Process(target=decode_model, args=(use_gpu, gpu_id))
+                p.start()
+                p.join()
 
                 # Read decoded data
                 SE_mat=sio.loadmat('enhanced_norm_fea_mat/test.normedlsp.mat')
