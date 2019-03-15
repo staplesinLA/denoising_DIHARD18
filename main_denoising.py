@@ -11,7 +11,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import argparse
 import math
-from multiprocessing import Process
+import multiprocessing
 import os
 import shutil
 import sys
@@ -35,6 +35,29 @@ BITDEPTH = 16 # Expected bitdepth of input WAV.
 WL = 512 # Analysis window length in samples for feature extraction.
 WL2 = WL // 2
 NFREQS = 257 # Number of positive frequencies in FFT output.
+
+
+
+class Process(multiprocessing.Process):
+    """Subclass of ``Process`` that retains raised exceptions as an attribute."""
+    def __init__(self, *args, **kwargs):
+        multiprocessing.Process.__init__(self, *args, **kwargs)
+        self._pconn, self._cconn = multiprocessing.Pipe()
+        self._exception = None
+
+    def run(self):
+        try:
+            super(Process, self).run()
+            self._cconn.send(None)
+        except Exception as e:
+            tb = traceback.format_exc()
+            self._cconn.send((e, tb))
+
+    @property
+    def exception(self):
+        if self._pconn.poll():
+            self._exception = self._pconn.recv()
+        return self._exception
 
 
 def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
@@ -128,6 +151,9 @@ def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
                       gpu_id))
             p.start()
             p.join()
+            if p.exception:
+                e, tb = p.exception
+                raise e
 
             # Read in IRM and directly mask the original LPS features.
             irm = sio.loadmat(irm_fn)['IRM']
