@@ -18,10 +18,32 @@ import sys
 import librosa
 
 import utils
+from utils import VALID_VAD_SRS, VALID_VAD_FRAME_LENGTHS, VALID_VAD_MODES
+
+
+def perform_vad(wav_file, segs_file, **kwargs):
+    """Perform VAD for WAV file.
+
+    Parameters
+    ----------
+    wav_file : str
+        Path to WAV file to perform VAD for.
+
+    segs_file : str
+        Path to output segments file.
+
+    kwargs
+        Keyword arguments to pass to ``utils.vad``.
+    """
+    data, fs = librosa.load(wav_file, sr=16000)
+    vad_info = utils.vad(data, fs, **kwargs)
+    segments = utils.get_segments(vad_info, fs)
+    utils.write_segments(segs_file, segments)
 
 
 def main():
     """Main."""
+    # Parse command line arguments.
     parser = argparse.ArgumentParser(
         description='Perform VAD using webrtcvad.', add_help=True)
     parser.add_argument(
@@ -35,11 +57,14 @@ def main():
         '-S', dest='scpf', nargs=None, type=str, metavar='STR',
         help='script file of paths to WAV files to denosie (default: %(default)s)')
     parser.add_argument(
-        '--mode', nargs=None, default=3, type=int, metavar='INT',
-        help='WebRTC VAD aggressiveness (default: %(default)s)')
+        '--fs_vad', nargs=None, default=16000, type=int, metavar='INT',
+        help='target sample rate in Hz for VAD (default: %(default)s)')
     parser.add_argument(
         '--hoplength', nargs=None, default=30, type=int, metavar='INT',
         help='duration between frames in ms (default: %(default)s)')
+    parser.add_argument(
+        '--mode', nargs=None, default=3, type=int, metavar='INT',
+        help='WebRTC VAD aggressiveness (default: %(default)s)')
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -51,9 +76,18 @@ def main():
         parser.error(
             'At least one of --wav_dir or --output_dir must be set.')
         sys.exit(1)
-
+    if args.fs_vad not in VALID_VAD_SRS:
+        parser.error(
+            '--fs_vad must be one of %s' % VALID_VAD_SRS)
+        sys.exit(1)
+    if args.hoplength not in VALID_VAD_FRAME_LENGTHS:
+        parser.error(
+            '--hop_length must be one of %s' % VALID_VAD_FRAME_LENGTHS)
+        sys.exit(1)
+    if args.mode not in VALID_VAD_MODES:
+        parser.add_argument('--mode must be one of %s' % VALID_VAD_MODES)
+        sys.exit(1)
     args.frame_length = args.hoplength # Retain hoplength argument for compatibility.
-    args.fs_vad = 16000
 
     # Determine files to perform VAD on.
     if args.scpf is not None:
@@ -68,15 +102,17 @@ def main():
         args.output_dir = args.wav_dir
 
     # Perform VAD.
-    for wav in wav_files:
-        if wav.endswith('.wav'):
-            data, fs = librosa.load(wav, sr=16000)
-            vad_info = utils.vad(
-                data, fs, args.fs_vad, args.frame_length, args.mode)
-            segments = utils.get_segments(vad_info, fs)
-            bn = os.path.basename(wav)
-            segsf = os.path.join(args.output_dir, bn.replace('.wav', '.sad'))
-            utils.write_segments(segsf, segments)
+    for wav_file in wav_files:
+        try:
+            bn = os.path.basename(wav_file)
+            segs_file = os.path.join(args.output_dir, bn.replace('.wav', '.sad'))
+            perform_vad(
+                wav_file, segs_file, fs_vad=args.fs_vad, frame_length=args.frame_length,
+                vad_mode=args.mode)
+        except Exception:
+            # TODO: Log exception plus traceback somewhere.
+            utils.error('Problem encountered while processing file "%s". Skipping.' % wav_file)
+            continue
 
 
 if __name__ == '__main__':

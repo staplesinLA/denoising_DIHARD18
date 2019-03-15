@@ -19,6 +19,12 @@ def warn(msg):
     print(msg, file=sys.stderr)
 
 
+def error(msg):
+    """Print warning message to STERR."""
+    msg = 'ERROR: %s' % msg
+    print(msg, file=sys.stderr)
+
+
 # TODO: Find out why this duplicates functionality of librosa.core.stft.
 def stft(x, window, n_per_seg=512, noverlap=256):
     """Return short-time Fourier transform (STFT) for signal.
