@@ -110,7 +110,6 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
                     tmp_dir, 'noisy_normed_lps.scp')
                 irm_fn = os.path.join(
                     tmp_dir, 'irm.mat')
-                enhanced_wav = os.path.join(tmp_dir, 'se.wav')
 
                 # Extract LPS features from waveform.
                 noisy_htkdata = utils.wav2logspec(temp, window=np.hamming(WL))
@@ -146,11 +145,7 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
                 wave_recon = utils.logspec2wav(
                     masked_lps, temp, window=np.hamming(WL), n_per_seg=WL,
                     noverlap=WL2)
-                wav_io.write(enhanced_wav, SR, np.asarray(wave_recon))
-
-                # Back to time domain.
-                rate, chunk_data_se = wav_io.read(enhanced_wav)
-                data_se.append(chunk_data_se)
+                data_se.append(wave_recon)
             finally:
                 shutil.rmtree(tmp_dir)
         data_se = np.concatenate(data_se)
