@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import os
 import struct
 import sys
+import wave
 
 import librosa.core
 import librosa.util
@@ -289,3 +290,33 @@ def load_script_file(fn, ext=None):
 def xor(x, y):
     """Return truth value of ``x`` XOR ``y``."""
     return bool(x) != bool(y)
+
+
+def get_sr(fn):
+    """Return sample rate in Hz of WAV file."""
+    try:
+        # It appears that wave.open isn't a context manager in Python 2...
+        f = wave.open(fn, 'rb')
+        return f.getframerate()
+    finally:
+        f.close()
+
+
+def get_num_channels(fn):
+    """Return number of channels present in  WAV file."""
+    try:
+        # It appears that wave.open isn't a context manager in Python 2...
+        f = wave.open(fn, 'rb')
+        return f.getnchannels()
+    finally:
+        f.close()
+
+
+def get_bitdepth(fn):
+    """Return bitdepth of WAV file."""
+    try:
+        # It appears that wave.open isn't a context manager in Python 2...
+        f = wave.open(fn, 'rb')
+        return f.getsampwidth()*8
+    finally:
+        f.close()

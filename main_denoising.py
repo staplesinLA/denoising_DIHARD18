@@ -169,18 +169,17 @@ def main_denoising(wav_files, out_dir, **kwargs):
     # Perform speech enhancement.
     for src_wav_file in wav_files:
         # Perform basic checks of input WAV.
-        with wave.open(src_wav_file, 'rb') as f:
-            if f.getframerate() != SR:
-                utils.error('Sample rate of file "%s" is not %d Hz. Skipping.' %
-                            (src_wav_file, SR))
-                continue
-            if f.getnchannels() != NUM_CHANNELS:
-                utils.error('File "%s" is not monochannel. Skipping.' % src_wav_file)
-                continue
-            if f.getsampwidth()*8 != BITDEPTH:
-                utils.error('Bitdepth of file "%s" is not %d. Skipping.' %
-                            (src_wav_file, BITDEPTH))
-                continue
+        if utils.get_sr(src_wav_file) != SR:
+            utils.error('Sample rate of file "%s" is not %d Hz. Skipping.' %
+                        (src_wav_file, SR))
+            continue
+        if utils.get_num_channels(src_wav_file) != NUM_CHANNELS:
+            utils.error('File "%s" is not monochannel. Skipping.' % src_wav_file)
+            continue
+        if utils.get_bitdepth(src_wav_file) != BITDEPTH:
+            utils.error('Bitdepth of file "%s" is not %d. Skipping.' %
+                        (src_wav_file, BITDEPTH))
+            continue
 
         # Denoise.
         try:
