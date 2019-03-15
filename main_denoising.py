@@ -120,9 +120,9 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
 
                 # Write features to HTK binary format making sure to also
                 # create a script file.
-                utils.writeHtk(
-                    noisy_normed_lps_fn, normed_noisy, sampPeriod=SR,
-                    parmKind=9)
+                utils.write_htk(
+                    noisy_normed_lps_fn, normed_noisy, samp_period=SR,
+                    parm_kind=9)
                 cntk_len = noisy_htkdata.shape[0] - 1
                 with open(noisy_normed_lps_scp_fn, 'w') as f:
                     f.write('irm=%s[0,%d]\n' % (noisy_normed_lps_fn, cntk_len))
@@ -144,7 +144,7 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
 
                 # Reconstruct audio.
                 wave_recon = utils.logspec2wav(
-                    masked_lps, temp, window=np.hamming(WL), nperseg=WL,
+                    masked_lps, temp, window=np.hamming(WL), n_per_seg=WL,
                     noverlap=WL2)
                 wav_io.write(enhanced_wav, SR, np.asarray(wave_recon))
 

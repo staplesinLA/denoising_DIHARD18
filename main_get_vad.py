@@ -15,29 +15,10 @@ import argparse
 import os
 import sys
 
-from librosa import load
+import librosa
 
-import utils
+from utils import get_segments, vad, write_segments
 
-
-def main_vad(wav_dir, mode, hoplength):
-    """TODO"""
-    if not os.path.exists(wav_dir):
-        raise RuntimeError('cannot locate the original dictionary !')
-
-    wav_files = [os.path.join(wav_dir, line)  for line in os.listdir(wav_dir)]
-    wav_files = sorted(wav_files)
-    for wav in wav_files:
-        if wav.endswith('.wav'):
-            data, fs = load(wav, sr=16000)
-            vad_info = utils.vad(
-                data, fs, fs_vad=16000, hoplength=hoplength, vad_mode=mode)
-            segments = utils.get_segments(vad_info, fs)
-            with open(wav.replace('.wav', '.sad'), 'w') as f:
-                for i in range(segments.shape[0]):
-                    start_time = segments[i][0]
-                    end_time = segments[i][1]
-                    f.write('%.3f  %.3f \n' % (start_time, end_time))
 
 
 def main():
@@ -58,7 +39,22 @@ def main():
         parser.print_help()
         sys.exit(1)
     args = parser.parse_args()
-    main_vad(wav_dir=args.wav_dir, mode=args.mode, hoplength=args.hoplength)
+    args.frame_length = args.hoplength # Retain hoplength argument for compatibility.
+    args.fs_vad = 16000
+
+    if not os.path.exists(args.wav_dir):
+        raise RuntimeError('cannot locate the original dictionary !')
+
+    wav_files = [os.path.join(args.wav_dir, line)  for line in os.listdir(args.wav_dir)]
+    wav_files = sorted(wav_files)
+    for wav in wav_files:
+        if wav.endswith('.wav'):
+            data, fs = librosa.load(wav, sr=16000)
+            vad_info = vad(
+                data, fs, args.fs_vad, args.frame_length, args.mode)
+            segments = get_segments(vad_info, fs)
+            segsf = wav.replace('.wav', '.sad')
+            write_segments(segsf, segments)
 
 
 if __name__ == '__main__':
