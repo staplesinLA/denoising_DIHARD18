@@ -1,6 +1,7 @@
 """Various utility functions."""
 from __future__ import print_function
 from __future__ import unicode_literals
+import os
 import struct
 import sys
 
@@ -248,3 +249,37 @@ def write_segments(fn, segs, n_digits=3, label=''):
         for onset, offset in segs:
             line = fmt_str % (onset, offset, label)
             f.write(line.encode('utf-8'))
+
+
+def listdir(dirpath, abspath=True, ext=None):
+    """List contents of directory."""
+    fns = os.listdir(dirpath)
+    if ext is not None:
+        fns = [fn for fn in fns if fn.endswith(ext)]
+    if abspath:
+        fns = [os.path.abspath(os.path.join(dirpath, fn))
+               for fn in fns]
+    fns = sorted(fns)
+    return fns
+
+
+def load_script_file(fn, ext=None):
+    """Load HTK script file of paths."""
+    with open(fn, 'rb') as f:
+        paths = [line.decode('utf-8').strip() for line in f]
+    paths = sorted(paths)
+    if ext is not None:
+        filt_paths = []
+        for path in paths:
+            if not path.endswith(ext):
+                warn('Skipping file "%s" that does not match extension "%s"' %
+                     (path, ext))
+                continue
+            filt_paths.append(path)
+        paths = filt_paths
+    return paths
+
+
+def xor(x, y):
+    """Return truth value of ``x`` XOR ``y``."""
+    return bool(x) != bool(y)

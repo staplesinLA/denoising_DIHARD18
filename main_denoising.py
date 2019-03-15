@@ -10,11 +10,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import argparse
-import glob
 import math
 from multiprocessing import Process
 import os
 import shutil
+import sys
 import tempfile
 
 import numpy as np
@@ -34,13 +34,13 @@ WL2 = WL // 2
 NFREQS = 257 # Number of positive frequencies in FFT output.
 
 
-def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
+def main_denoising(wav_files, out_dir, use_gpu, gpu_id, truncate_minutes):
     """Perform speech enhancement for WAV files in ``wav_dir``.
 
     Parameters
     ----------
-    wav_dir : str
-        Path to directory of WAV files to enhance.
+    wav_files : list of str
+        Paths to WAV files to enhance.
 
     out_dir : str
         Path to output directory for enhanced WAV files.
@@ -58,10 +58,6 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
         be done on chunks of audio no greather than ``truncate_minutes``
         minutes duration.
     """
-    if not os.path.exists(wav_dir):
-        raise RuntimeError(
-            'Cannot locate the original dictionary: %s' % wav_dir)
-
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -71,7 +67,6 @@ def main_denoising(wav_dir, out_dir, use_gpu, gpu_id, truncate_minutes):
     var = glo_mean_var['global_var']
 
     # Perform speech enhancement.
-    wav_files = sorted(glob.glob(os.path.join(wav_dir, '*.wav')))
     for wav in wav_files:
         # Read noisy audio WAV file.
         rate, wav_data = wav_io.read(wav)
@@ -167,20 +162,43 @@ def main():
         '--output_dir', nargs=None, type=str, metavar='STR',
         help='output directory for denoised WAV files (default: %(default)s)')
     parser.add_argument(
-        '--use_gpu', nargs=None, type=str, metavar='STR',
-        choices=['true', 'false'], default='true',
+        '-S', dest='scpf', nargs=None, type=str, metavar='STR',
+        help='script file of paths to WAV files to denosie (detault: %(default)s)')
+    parser.add_argument(
+        '--use_gpu', nargs=None, default='true', type=str, metavar='STR',
+        choices=['true', 'false'],
         help='whether or not to use GPU (default: %(default)s)')
     parser.add_argument(
-        '--gpu_id', nargs=None, type=int, metavar='INT', default=0,
+        '--gpu_id', nargs=None, default=0, type=int, metavar='INT',
         help='device id of GPU to use (default: %(default)s)')
     parser.add_argument(
-        '--truncate_minutes', nargs=None, type=float,
-        metavar='FLOAT', default=10,
+        '--truncate_minutes', nargs=None, default=10, type=float,
+        metavar='FLOAT',
         help='maximum chunk size in minutes (default: %(default)s)')
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
     args = parser.parse_args()
+    if not utils.xor(args.wav_dir, args.scpf):
+        parser.error('Exactly one of --wav_dir and -S must be set.')
+        sys.exit(1)
     use_gpu = args.use_gpu == 'true'
+
+    # Determine files to denoise.
+    if args.scpf is not None:
+        wav_files = utils.load_script_file(args.scpf, '.wav')
+    else:
+        wav_files = utils.listdir(args.wav_dir, ext='.wav')
+
+    # Determine output directory for denoised audio.
+    if args.output_dir is None and args.wav_dir is not None:
+        utils.warn('Output directory not specified. Defaulting to "%s"' %
+                   args.wav_dir)
+        args.output_dir = args.wav_dir
+
+    # Perform denoising.
     main_denoising(
-        args.wav_dir, args.output_dir, use_gpu, args.gpu_id,
+        wav_files, args.output_dir, use_gpu, args.gpu_id,
         args.truncate_minutes)
 
 
