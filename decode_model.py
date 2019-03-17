@@ -10,20 +10,31 @@ from __future__ import unicode_literals
 import os
 import re
 import sys
+import warnings
+
+warnings.filterwarnings(
+    'ignore', message=r'[\s\S]+Missing optional dependency')
+warnings.filterwarnings(
+    'ignore', message='Unsupported Linux distribution')
+warnings.filterwarnings(
+    'ignore', message='HTKDeserializer')
+warnings.filterwarnings(
+    'ignore', message='Insufficiently recent colorama version found')
 
 from cntk.io import MinibatchSource, HTKFeatureDeserializer, StreamDef, StreamDefs
 from cntk import load_model, combine
 from cntk.device import try_set_default_device, gpu, cpu
 import numpy as np
 import scipy.io as sio
-
+import wurlitzer
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 MODELF = os.path.join(HERE, "model", "speech_enhancement.model")
 PY2 = sys.version_info[0] == 2
 
 
-def decode_model(features_file, irm_mat_dir, feature_dim, use_gpu=True, gpu_id=0):
+def decode_model(features_file, irm_mat_dir, feature_dim, use_gpu=True,
+                 gpu_id=0):
     """Applies model to LPS features to generate ideal ratio mask.
 
     Parameters
@@ -32,10 +43,12 @@ def decode_model(features_file, irm_mat_dir, feature_dim, use_gpu=True, gpu_id=0
         Path to HTK script file for chunks of LPS features to be processed.
 
     irm_mat_dir : str
-        Path to output directory for ``.mat`` files containing ideal ratio masks.
+        Path to output directory for ``.mat`` files containing ideal ratio
+        masks.
 
     feature_dim : int
-        Feature dimensionality. Needed to parse HTK binary file containing features.
+        Feature dimensionality. Needed to parse HTK binary file containing
+        features.
 
     use_gpu : bool, optional
         If True and GPU is available, perform all processing on GPU.
@@ -49,17 +62,19 @@ def decode_model(features_file, irm_mat_dir, feature_dim, use_gpu=True, gpu_id=0
         os.makedirs(irm_mat_dir)
 
     # Load model.
-    try_set_default_device(gpu(gpu_id) if use_gpu else cpu()) # Select GPU if specified
-                                                              # and available.
-    model_dnn = load_model(MODELF)
+    with wurlitzer.pipes() as (stdout, stderr):
+        gpu_id = 999
+        try_set_default_device(gpu(gpu_id) if use_gpu else cpu())
+        model_dnn = load_model(MODELF)
 
-    # Compute ideal ratio masks for all chunks of LPS features specified in the script
-    # file and save as .mat files in irm_mat_dir.
-    test_reader = MinibatchSource(
-        HTKFeatureDeserializer(StreamDefs(
-            amazing_features=StreamDef(shape=feature_dim, context=(3, 3),
-                                       scp=features_file))),
-        randomize=False, frame_mode=False, trace_level=0)
+    # Compute ideal ratio masks for all chunks of LPS features specified in
+    # the script file and save as .mat files in irm_mat_dir.
+    with wurlitzer.pipes() as (stdout, stderr):
+        test_reader = MinibatchSource(
+            HTKFeatureDeserializer(StreamDefs(
+                amazing_features=StreamDef(shape=feature_dim, context=(3, 3),
+                                           scp=features_file))),
+            randomize=False, frame_mode=False, trace_level=0)
     eval_input_map = {input: test_reader.streams.amazing_features}
     with open(features_file, 'r') as f:
         for line in f:

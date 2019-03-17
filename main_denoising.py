@@ -16,6 +16,7 @@ import os
 import shutil
 import sys
 import tempfile
+import traceback
 import wave
 
 import numpy as np
