@@ -63,7 +63,6 @@ def decode_model(features_file, irm_mat_dir, feature_dim, use_gpu=True,
 
     # Load model.
     with wurlitzer.pipes() as (stdout, stderr):
-        gpu_id = 999
         try_set_default_device(gpu(gpu_id) if use_gpu else cpu())
         model_dnn = load_model(MODELF)
 
