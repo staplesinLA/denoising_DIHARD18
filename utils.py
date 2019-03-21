@@ -2,9 +2,9 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
+import sndhdr
 import struct
 import sys
-import wave
 
 import librosa.core
 import librosa.util
@@ -93,9 +93,9 @@ def logspec2wav(lps, wave, window, n_per_seg=512, noverlap=256):
 
 
 MAX_PCM_VAL = 32767
-def peak_normalization(wave):
+def peak_normalization(x):
     """Perform peak normalization."""
-    norm = wave.astype(float)
+    norm = x.astype(float)
     norm = norm / max(abs(norm)) * MAX_PCM_VAL
     return norm.astype(int)
 
@@ -292,37 +292,35 @@ def xor(x, y):
     return bool(x) != bool(y)
 
 
+def is_wav(fn):
+    """Returns True if ``fn`` is a WAV file."""
+    hinfo = sndhdr.what(fn)
+    if hinfo is None:
+        return False
+    elif hinfo[0] != 'wav':
+        return False
+    return True
+
+
 def get_sr(fn):
     """Return sample rate in Hz of WAV file."""
-    f = None
-    try:
-        # It appears that wave.open isn't a context manager in Python 2...
-        f = wave.open(fn, 'rb')
-        return f.getframerate()
-    finally:
-        if f is not None:
-            f.close()
+    if not is_wav(fn):
+        raise ValueError('File "%s" is not a valid WAV file.' % fn)
+    hinfo = sndhdr.what(fn)
+    return hinfo[1]
 
 
 def get_num_channels(fn):
     """Return number of channels present in  WAV file."""
-    f = None
-    try:
-        # It appears that wave.open isn't a context manager in Python 2...
-        f = wave.open(fn, 'rb')
-        return f.getnchannels()
-    finally:
-        if f is not None:
-            f.close()
+    if not is_wav(fn):
+        raise ValueError('File "%s" is not a valid WAV file.' % fn)
+    hinfo = sndhdr.what(fn)
+    return hinfo[2]
 
 
 def get_bitdepth(fn):
     """Return bitdepth of WAV file."""
-    f = None
-    try:
-        # It appears that wave.open isn't a context manager in Python 2...
-        f = wave.open(fn, 'rb')
-        return f.getsampwidth()*8
-    finally:
-        if f is not None:
-            f.close()
+    if not is_wav(fn):
+        raise ValueError('File "%s" is not a valid WAV file.' % fn)
+    hinfo = sndhdr.what(fn)
+    return hinfo[4]
