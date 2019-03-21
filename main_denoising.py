@@ -1,10 +1,56 @@
 #!/usr/bin/env python
-"""Perform denoising of audio stored in WAV files.
+"""Perform speech enhancement for audio stored in WAV files.
+
+This script performs speech enhancement of audio using a deep-learning based
+enhancement model (Lei et al, 2018; Gao et al, 2018; Lei et al, 2017). To perform
+enhancement for all WAV files under the directory ``wav_dir/`` and write the
+enhanced audio to ``se_wav_dir/`` as WAV files:
+
+    python main_denoising.py --wav_dir wav_dir --output_dir se_wav_dir
+
+For each file with the ``.wav`` extension under ``wav_dir/``, there will now be
+a corresponding enhanced version under ``se_wav_dir``.
+
+Alternately, you may specify the files to process via a script file of paths to
+WAV files with one path per line:
+
+    /path/to/file1.wav
+    /path/to/file2.wav
+    /path/to/file3.wav
+    ...
+
+This functionality is enabled via the ``-S`` flag, as in the following:
+
+   python main_denoising.py -S some.scp --output_dir se_wav_dir/
+
+As this model is computationally demanding, use of a GPU is recommended, which
+may be enabled via the ``--use_gpu`` and ``--gpu_id`` flags. The ``--use_gpu`` flag
+indicates whether or not to use a GPU with possible values being ``false`` and ``true``.
+The ``--gpu_id`` flag specifies the device id of the GPU to use. For instance:
+
+   python main_denoising.py --use_gpu true --gpu_id 0 -S some.scp --output_dir se_wav_dir/
+
+will perform enhancement using the GPU with device id 0.
+
+If you find that you have insufficient available GPU memory to run the model, try
+adjusting the flag ``--truncate_minutes``, which controls the length of audio
+chunks processed. Smaller values of ``--truncate_minutes`` will lead to a smaller
+memory footprint. For instance:
+
+   python main_denoising.py --truncate_minutes 10 --use_gpu true --gpu_id 0 -S some.scp --output_dir se_wav_dir/               
+
+will perform enhancement on the GPU using chunks that are 10 minutes in duration. This should use at
+most 8 GB of GPU memory.
 
 References
 ----------
-Sun, Lei, et al. "Speaker diarization with enhancing speech for the First DIHARD
-Challenge." Proceedings of INTERSPEECH 2019. 2793-2797.
+- Sun, Lei, et al. (2018). "Speaker diarization with enhancing speech for the First DIHARD
+ Challenge." Proceedings of INTERSPEECH 2018. 2793-2797.
+- Gao, Tian, et al. (2018). "Densely connected progressive learning for LSTM-based speech
+  enhancement." Proceedings of ICASSP 2018.
+- Sun, Lei, et al. (2017). "Multiple-target deep learning for LSTM-RNN based speech enhancement."
+  Proceedings of the Fifth Joint Workshop on Hands-free Speech Communication and Microphone
+  Arrays.
 """
 from __future__ import division
 from __future__ import print_function
@@ -171,7 +217,7 @@ def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
     wav_io.write(dest_wav_file, SR, data_se)
 
 
-def main_denoising(wav_files, out_dir, **kwargs):
+def main_denoising(wav_files, output_dir, **kwargs):
     """Perform speech enhancement for WAV files in ``wav_dir``.
 
     Parameters
@@ -179,14 +225,14 @@ def main_denoising(wav_files, out_dir, **kwargs):
     wav_files : list of str
         Paths to WAV files to enhance.
 
-    out_dir : str
+    output_dir : str
         Path to output directory for enhanced WAV files.
 
     kwargs
         Keyword arguments to pass to ``denoise_wav``.
     """
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     # Load global MVN statistics.
     global_mean_var = sio.loadmat(GLOBAL_MEAN_VAR_MATF)
@@ -211,14 +257,15 @@ def main_denoising(wav_files, out_dir, **kwargs):
         # Denoise.
         try:
             bn = os.path.basename(src_wav_file)
-            dest_wav_file = os.path.join(out_dir, bn)
+            dest_wav_file = os.path.join(output_dir, bn)
             denoise_wav(
                 src_wav_file, dest_wav_file, global_mean, global_var,
                 **kwargs)
             print('Finished processing file "%s".' % src_wav_file)
-        except Exception:
+        except Exception as e:
             # TODO: log exception plus traceback somewhere.
-            utils.error('Problem encountered while processing file "%s". Skipping.' % src_wav_file)
+            msg = 'Problem encountered while processing file "%s". Skipping.' % src_wav_file
+            utils.error(msg)
             continue
 
 def main():

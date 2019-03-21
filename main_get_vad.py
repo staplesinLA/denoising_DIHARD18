@@ -1,13 +1,58 @@
 #!/usr/bin/env python
-"""TODO
+"""Perform voice activity detection (VAD) using WebRTC's implementation.
 
-To change the aggressiveness mode, how aggressive WebRTC is about filtering out
-non-speech, use the ``--mode`` parameter with an integer in the range [0, 3]:
+To perform VAD for all WAV files under the directory ``wav_dir/`` and write
+the output to the directory ``vad_dir/`` as HTK label files:
 
-    python main_get_vad.py --mode 0 --wav_dir some_dir
+    python main_get_vad.py --wav_dir wav_dir/ --output_dir vad_dir/
 
-Higher values for ``--mode`` translate into more aggressive filtering.
+For each file with the ``.wav`` extension under ``wav_dir/``, there will now be
+a corresponding label file with the extension ``.sad`` under ``vad_dir/``. Each
+label file will contain one speech segment per line, each consisting of three
+space-delimited fields:
 
+- onset  --  the onset of the segment in seconds
+- offset --  the offset of the segment in seconds
+- label  --  the label for the segment; controlled by the ``--speech_label`` flag
+
+If ``--output_dir`` is not specified, these files will be output to ``wav_dir/``.
+
+Alternately, you may specify the files to process via a script file of paths to
+WAV files with one path per line:
+
+    /path/to/file1.wav
+    /path/to/file2.wav
+    /path/to/file3.wav
+    ...
+
+This functionality is enabled via the ``-S`` flag, as in the following:
+
+   python main_get_vad.py -S some.scp --output_dir vad_dir/
+
+which will perform VAD for those file listed in ``some.scp`` and output label files
+to ``vad_dir. Note that if you use a script file, you *MUST* specify an output
+directory.
+
+WebRTC exposes several parameters for tuning it's output, which may be adjusted via
+the following flags:
+
+- ``--fs_vad``  --  controls the sample rate the audio is resampled to prior to
+  performing VAD; possible values are 8 kHz, 16 kHz, 32 kHz, and 48 kHz
+- ``--hoplength``  --  the duration in milliseconds of the frames for VAD; possible
+  values are 10 ms, 20 ms, and 30 ms
+- ``--mode``  --   the WebRTC aggressiveness mode, which controls how aggressive
+  WebRTC is about filter out non-speech; 0 is least aggressive and 3 most aggressive
+
+When processing large batches of audio, it may be desireable to parallelize the
+computation, which may be done by specifying the number of parallel processes to
+employ via the ``--n_jobs`` flag:
+
+   python main_get_vad.py --n_jobs 40 -S some.scp --output_dir vad_dir/
+
+References
+----------
+- https://github.com/wiseman/py-webrtcvad.git
+- https://webrtc.org/
 """
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -22,7 +67,7 @@ import utils
 from utils import VALID_VAD_SRS, VALID_VAD_FRAME_LENGTHS, VALID_VAD_MODES
 
 
-def perform_vad(wav_file, segs_file, **kwargs):
+def perform_vad(wav_file, segs_file, speech_label, **kwargs):
     """Perform VAD for WAV file.
 
     Parameters
@@ -32,6 +77,9 @@ def perform_vad(wav_file, segs_file, **kwargs):
 
     segs_file : str
         Path to output segments file.
+
+    speech_label : str
+        Label for speech segments.
 
     kwargs
         Keyword arguments to pass to ``utils.vad``.
@@ -43,10 +91,10 @@ def perform_vad(wav_file, segs_file, **kwargs):
         returns ``None``.
     """
     try:
-        data, fs = librosa.load(wav_file, sr=16000)
+        data, fs = librosa.load(wav_file, sr=None)
         vad_info = utils.vad(data, fs, **kwargs)
         segments = utils.get_segments(vad_info, fs)
-        utils.write_segments(segs_file, segments)
+        utils.write_segments(segs_file, segments, label=speech_label)
         return None
     except Exception as e:
         return e
@@ -62,11 +110,17 @@ def main():
         help='directory containing WAV files to perform VAD for '
              '(default: %(default)s)')
     parser.add_argument(
-        '--output_dir', nargs=None, type=str, metavar='STR',
-        help='output directory for denoised WAV files (default: %(default)s)')
-    parser.add_argument(
         '-S', dest='scpf', nargs=None, type=str, metavar='STR',
-        help='script file of paths to WAV files to denosie (default: %(default)s)')
+        help='script file of paths to WAV files to perform VAD for (default: %(default)s)')
+    parser.add_argument(
+        '--output_dir', nargs=None, type=str, metavar='STR',
+        help='output directory for label files (default: None)')
+    parser.add_argument(
+        '--output_ext', nargs=None, default='.sad', type=str, metavar='STR',
+        help='extension for output label files (default: %(default)s)')
+    parser.add_argument(
+        '--speech_label', nargs=None, default='', type=str, metavar='STR',
+        help='label for speech segments (default: %(default)s)')
     parser.add_argument(
         '--fs_vad', nargs=None, default=16000, type=int, metavar='INT',
         help='target sample rate in Hz for VAD (default: %(default)s)')
@@ -119,9 +173,12 @@ def main():
     def kwargs_gen():
         for wav_file in wav_files:
             bn = os.path.basename(wav_file)
-            segs_file = os.path.join(args.output_dir, bn.replace('.wav', '.sad'))
-            yield dict(wav_file=wav_file, segs_file=segs_file, fs_vad=args.fs_vad,
-                       frame_length=args.frame_length, vad_mode=args.mode)
+            segs_file = os.path.join(
+                args.output_dir, bn.replace('.wav', args.output_ext))
+            yield dict(
+                wav_file=wav_file, segs_file=segs_file,
+                speech_label=args.speech_label, fs_vad=args.fs_vad,
+                frame_length=args.frame_length, vad_mode=args.mode)
     f = delayed(perform_vad)
     res = Parallel(n_jobs=args.n_jobs)(f(**kwargs) for kwargs in kwargs_gen())
     for e, wav_file in zip(res, wav_files):
