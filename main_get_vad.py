@@ -15,6 +15,7 @@ import argparse
 import os
 import sys
 
+from joblib import delayed, Parallel
 import librosa
 
 import utils
@@ -34,11 +35,21 @@ def perform_vad(wav_file, segs_file, **kwargs):
 
     kwargs
         Keyword arguments to pass to ``utils.vad``.
+
+    Returns
+    -------
+    e : Exception
+        If an exception is raised during processing, it is returned. Otherwise,
+        returns ``None``.
     """
-    data, fs = librosa.load(wav_file, sr=16000)
-    vad_info = utils.vad(data, fs, **kwargs)
-    segments = utils.get_segments(vad_info, fs)
-    utils.write_segments(segs_file, segments)
+    try:
+        data, fs = librosa.load(wav_file, sr=16000)
+        vad_info = utils.vad(data, fs, **kwargs)
+        segments = utils.get_segments(vad_info, fs)
+        utils.write_segments(segs_file, segments)
+        return None
+    except Exception as e:
+        return e
 
 
 def main():
@@ -65,6 +76,9 @@ def main():
     parser.add_argument(
         '--mode', nargs=None, default=3, type=int, metavar='INT',
         help='WebRTC VAD aggressiveness (default: %(default)s)')
+    parser.add_argument(
+        '--n_jobs', nargs=None, default=1, type=int, metavar='INT',
+        help='number of parallel jobs (default: %(default)s)')
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -102,17 +116,18 @@ def main():
         args.output_dir = args.wav_dir
 
     # Perform VAD.
-    for wav_file in wav_files:
-        try:
+    def kwargs_gen():
+        for wav_file in wav_files:
             bn = os.path.basename(wav_file)
             segs_file = os.path.join(args.output_dir, bn.replace('.wav', '.sad'))
-            perform_vad(
-                wav_file, segs_file, fs_vad=args.fs_vad, frame_length=args.frame_length,
-                vad_mode=args.mode)
-        except Exception:
-            # TODO: Log exception plus traceback somewhere.
-            utils.error('Problem encountered while processing file "%s". Skipping.' % wav_file)
+            yield dict(wav_file=wav_file, segs_file=segs_file, fs_vad=args.fs_vad,
+                       frame_length=args.frame_length, vad_mode=args.mode)
+    f = delayed(perform_vad)
+    res = Parallel(n_jobs=args.n_jobs)(f(**kwargs) for kwargs in kwargs_gen())
+    for e, wav_file in zip(res, wav_files):
+        if e is None:
             continue
+        utils.error('Problem encountered while processing file "%s". Skipping.' % wav_file)
 
 
 if __name__ == '__main__':
