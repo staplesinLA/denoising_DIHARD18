@@ -294,29 +294,35 @@ def xor(x, y):
 
 def get_sr(fn):
     """Return sample rate in Hz of WAV file."""
+    f = None
     try:
         # It appears that wave.open isn't a context manager in Python 2...
         f = wave.open(fn, 'rb')
         return f.getframerate()
     finally:
-        f.close()
+        if f is not None:
+            f.close()
 
 
 def get_num_channels(fn):
     """Return number of channels present in  WAV file."""
+    f = None
     try:
         # It appears that wave.open isn't a context manager in Python 2...
         f = wave.open(fn, 'rb')
         return f.getnchannels()
     finally:
-        f.close()
+        if f is not None:
+            f.close()
 
 
 def get_bitdepth(fn):
     """Return bitdepth of WAV file."""
+    f = None
     try:
         # It appears that wave.open isn't a context manager in Python 2...
         f = wave.open(fn, 'rb')
         return f.getsampwidth()*8
     finally:
-        f.close()
+        if f is not None:
+            f.close()
