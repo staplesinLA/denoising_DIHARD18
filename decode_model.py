@@ -28,6 +28,7 @@ import numpy as np
 import scipy.io as sio
 import wurlitzer
 
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 MODELF = os.path.join(HERE, "model", "speech_enhancement.model")
 PY2 = sys.version_info[0] == 2
@@ -95,7 +96,8 @@ def decode_model(features_file, irm_mat_dir, feature_dim, use_gpu=True,
             node_name = b'irm' if PY2 else 'irm'
             node_in_graph = model_dnn.find_by_name(node_name)
             output_nodes = combine([node_in_graph.owner])
-            irm = output_nodes.eval(real_noisy_fea)
+            with wurlitzer.pipes() as (stdout, stderr):
+                irm = output_nodes.eval(real_noisy_fea)
             irm = np.concatenate((irm), axis=0)
 
             # Write .mat file.
