@@ -13,7 +13,7 @@ RUN conda update -y -n root -c defaults conda
 RUN conda create --name dihard18 --clone cntk-py35
 RUN bash -c "source activate dihard18 && \
         pip install --upgrade pip && \
-        pip install librosa webrtcvad \
+        pip install librosa webrtcvad && \
         pip install wurlitzer joblib"
 RUN rm -rf /root/anaconda3/envs/cntk-py35
 
