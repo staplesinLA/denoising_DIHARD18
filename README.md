@@ -1,19 +1,19 @@
 # A quick-use package for speech enhancement based on our DIHARD18 system
 
 The repository provides tools to reproduce the enhancement results of the
-speech preprocessing part in our DIHARD18 system[1]. The deep-learning based
+speech preprocessing part of our DIHARD18 system[1]. The deep-learning based
 denoising model is trained on 400 hours of English and Mandarin audio; for full
 details see [1,2,3]. Currently the tools accept 16 kHz, 16-bit monochannel
 WAV files. Please convert the audio format in advance.
 
 Additionally, this package integrates a voice activity detection (VAD) module
-based on ``py-webrtcvad``, which provides a Python interface to the
+based on [py-webrtcvad](https://github.com/wiseman/py-webrtcvad), which provides a Python interface to the
 [WebRTC](https://webrtc.org/) VAD. The default parameters are tuned on the
 development set of DIHARD18.
 
 [1] Sun, Lei, et al. "Speaker Diarization with Enhancing Speech for the
 First DIHARD Challenge." Proc. Interspeech 2018 (2018):
-2793-2797.[PDF](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf)
+2793-2797. [PDF](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf)
 
 [2] Gao, Tian, et al. "Densely connected progressive learning for
 lstm-based speech enhancement." 2018 IEEE International Conference on
@@ -23,7 +23,7 @@ Acoustics, Speech and Signal Processing
 [3] Sun, Lei, et al. "Multiple-target deep learning for LSTM-RNN based
 speech enhancement." 2017 Hands-free Speech Communications and
 Microphone Arrays (HSCMA). IEEE,
-2017.[PDF](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf)
+2017. [PDF](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf)
 
 
 ## Main Prerequisites
@@ -33,8 +33,8 @@ Microphone Arrays (HSCMA). IEEE,
 * [Numpy](https://github.com/numpy/numpy)
 * [Scipy](https://github.com/scipy/scipy)
 * [Librosa](https://github.com/librosa/librosa)
-* [Wurlitzer] (https://github.com/minrk/wurlitzer)
-* [joblib] (https://github.com/joblib/joblib)
+* [Wurlitzer](https://github.com/minrk/wurlitzer)
+* [joblib](https://github.com/joblib/joblib)
 
 ## How to use it?
 
@@ -49,8 +49,8 @@ Microphone Arrays (HSCMA). IEEE,
         pip install numpy scipy librosa
         pip install cntk-gpu
         pip install webrtcvad
-	pip install wurlitzer
-	pip install joblib
+        pip install wurlitzer
+        pip install joblib
 	
    Make sure the CNTK engine installed successfully by querying its version:
 
@@ -66,9 +66,9 @@ Microphone Arrays (HSCMA). IEEE,
 
             WAV_DIR=<path to original wavs>
             SE_WAV_DIR=<path to output dir>
-	    USE_GPU=<true|false, if false use CPU, default=true>
-	    GPU_DEVICE_ID=<GPU device id on your machine, default=0>
-	    TRUNCATE_MINUTES=<audio chunk length in minutes, default=10>
+            USE_GPU=<true|false, if false use CPU, default=true>
+            GPU_DEVICE_ID=<GPU device id on your machine, default=0>
+            TRUNCATE_MINUTES=<audio chunk length in minutes, default=10>
 
       We recommend using a GPU for decoding as it's much faster than CPU.
       If decoding fails with a ``CUDA Error: out of memory`` error, reduce the
@@ -77,9 +77,9 @@ Microphone Arrays (HSCMA). IEEE,
     * For the VAD tool:
 
             VAD_DIR=<path to output dir>
-	    HOPLENGTH=<duration in milliseconds of VAD frame size, default=30>
-	    MODE=<WebRTC aggressiveness, default=3>
-	    NJOBS=<number of parallel processes, default=1>
+            HOPLENGTH=<duration in milliseconds of VAD frame size, default=30>
+            MODE=<WebRTC aggressiveness, default=3>
+            NJOBS=<number of parallel processes, default=1>
 
 5. Execute ``run_eval.sh``:
 
@@ -105,10 +105,10 @@ Microphone Arrays (HSCMA). IEEE,
    * The option ``--runtime=nvidia`` enables the use of GPUs within docker
 
    * The option ``-v /absolute/path/to/dihard/data:/data`` mounts the
-     folder where are stored the data into docker in the ``/data``
+     folder where the data are stored into Docker in the ``/data``
      folder. The directory ``/absolute/path/to/dihard/data`` **must
-     contain** a ``wav`` subdirectory. The results will be stored in
-     the directories ``wav_pn_enhanced`` and ``vad``.
+     contain** a ``wav/`` subdirectory. The results will be stored in
+     the directories ``wav_pn_enhanced/`` and ``vad/``.
 
 
 ## Details
@@ -125,7 +125,7 @@ Microphone Arrays (HSCMA). IEEE,
 2. VAD module
 
    The optional parameters of WebRTC VAD are aggressiveness mode (default=3)
-   and hop length (default=30). The default settings are tuned on the
+   and hop length (default=30 ms). The default settings are tuned on the
    development set of the [First DIHARD challenge](https://coml.lscp.ens.fr/dihard/2018/index.html).
    For the development set, here is the comparison between original speech
    and processed speech in terms of VAD metrics:
@@ -136,7 +136,7 @@ Microphone Arrays (HSCMA). IEEE,
    | FA           | 6.12         | 6.17          |
    | Total        | 17.97        | 13.38         |
 
-   And the performance on evaluation set:
+   And the performance on the evaluation set:
 
    | VAD(default) | Original_Eval | Processed_Eval |
    | ------       | ------        | ------         |
