@@ -1,20 +1,19 @@
-# A quick-use package of speech enhancement model in our DIHARD18 system
+# A quick-use package for speech enhancement based on our DIHARD18 system
 
-The repository provides tools to reproduce the enhancement results of
-the speech preprocessing part in our DIHARD18 system[1]. The
-deep-learning based denoising model is trained with 400-hour mixing
-data of both English and Mandarin. The model details can be found in
-[1,2,3]. Currently the tools accept 16K, 16-bit mono audios, please
-convert the audio format in advance.
+The repository provides tools to reproduce the enhancement results of the
+speech preprocessing part of our DIHARD18 system[1]. The deep-learning based
+denoising model is trained on 400 hours of English and Mandarin audio; for full
+details see [1,2,3]. Currently the tools accept 16 kHz, 16-bit monochannel
+WAV files. Please convert the audio format in advance.
 
-Additionally, this package also integrates a VAD module based on
-‘py-webrtcvad’ which provides a python interface to the WebRTC Voice
-Activity Detector (VAD). The default parameters are tuned on the
+Additionally, this package integrates a voice activity detection (VAD) module
+based on [py-webrtcvad](https://github.com/wiseman/py-webrtcvad), which provides a Python interface to the
+[WebRTC](https://webrtc.org/) VAD. The default parameters are tuned on the
 development set of DIHARD18.
 
 [1] Sun, Lei, et al. "Speaker Diarization with Enhancing Speech for the
 First DIHARD Challenge." Proc. Interspeech 2018 (2018):
-2793-2797.[PDF](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf)
+2793-2797. [PDF](http://home.ustc.edu.cn/~sunlei17/pdf/lei_IS2018.pdf)
 
 [2] Gao, Tian, et al. "Densely connected progressive learning for
 lstm-based speech enhancement." 2018 IEEE International Conference on
@@ -24,21 +23,20 @@ Acoustics, Speech and Signal Processing
 [3] Sun, Lei, et al. "Multiple-target deep learning for LSTM-RNN based
 speech enhancement." 2017 Hands-free Speech Communications and
 Microphone Arrays (HSCMA). IEEE,
-2017.[PDF](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf)
+2017. [PDF](http://home.ustc.edu.cn/~sunlei17/pdf/MULTIPLE-TARGET.pdf)
 
 
 ## Main Prerequisites
 
-* [CNTK](https://docs.microsoft.com/en-us/cognitive-toolkit/setup-linux-python?tabs=cntkpy26):
-  python version
+* [CNTK](https://docs.microsoft.com/en-us/cognitive-toolkit/setup-linux-python?tabs=cntkpy26)
 * [webrtcvad](https://github.com/wiseman/py-webrtcvad)
 * [Numpy](https://github.com/numpy/numpy)
 * [Scipy](https://github.com/scipy/scipy)
 * [Librosa](https://github.com/librosa/librosa)
+* [Wurlitzer](https://github.com/minrk/wurlitzer)
+* [joblib](https://github.com/joblib/joblib)
 
-
-
-## How to use it ?
+## How to use it?
 
 1. Download the speech enhancement repository :
 
@@ -51,38 +49,39 @@ Microphone Arrays (HSCMA). IEEE,
         pip install numpy scipy librosa
         pip install cntk-gpu
         pip install webrtcvad
-
-   Make sure you install the CNTK engine rightly by querying its
-   version:
+        pip install wurlitzer
+        pip install joblib
+	
+   Make sure the CNTK engine installed successfully by querying its version:
 
         python -c "import cntk; print(cntk.__version__)"
 
-3. Move to the dictionary :
+3. Move to the directory:
 
         cd ./denoising_DIHARD18
 
-4. Specify parameters in run_eval.sh :
+4. Specify parameters in ``run_eval.sh``:
 
-    * For speech enhancement tools:
+    * For the speech enhancement tool:
 
-            dihard_wav_dir=<path to original wavs>
-            output_dir=<path to output dir>
-            --use_gpu: <true|false, if false use CPU, default=true>
-            --gpu_id : <GPU id in your machine, default=0>
-            --truncate_minutes: <audio chunk length in case of gpu memory deficiency, default=5,
-                                 it will take no more than 4G GPU memory >
+            WAV_DIR=<path to original wavs>
+            SE_WAV_DIR=<path to output dir>
+            USE_GPU=<true|false, if false use CPU, default=true>
+            GPU_DEVICE_ID=<GPU device id on your machine, default=0>
+            TRUNCATE_MINUTES=<audio chunk length in minutes, default=10>
 
-      It's recommended to use GPU for decoding, because it's much
-      faster than CPU. If 'CUDA Error: out of memory' happens, please
-      turn down the truncate_minutes.
+      We recommend using a GPU for decoding as it's much faster than CPU.
+      If decoding fails with a ``CUDA Error: out of memory`` error, reduce the
+      value of ``TRUNCATE_MINUTES``.
 
-    * For VAD tools:
+    * For the VAD tool:
 
-            -- wav_dir :  <path to output dir>
-            -- mode : <GPU id in your machine, default=0>
-            -- hoplength : <GPU id in your machine, default=0>
+            VAD_DIR=<path to output dir>
+            HOPLENGTH=<duration in milliseconds of VAD frame size, default=30>
+            MODE=<WebRTC aggressiveness, default=3>
+            NJOBS=<number of parallel processes, default=1>
 
-5. Execute run_eval.sh :
+5. Execute ``run_eval.sh``:
 
         ./run_eval.sh
 
@@ -106,30 +105,29 @@ Microphone Arrays (HSCMA). IEEE,
    * The option ``--runtime=nvidia`` enables the use of GPUs within docker
 
    * The option ``-v /absolute/path/to/dihard/data:/data`` mounts the
-     folder where are stored the data into docker in the ``/data``
+     folder where the data are stored into Docker in the ``/data``
      folder. The directory ``/absolute/path/to/dihard/data`` **must
-     contain** a ``wav`` subdirectory. The results will be stored on
-     the subfolder ``wav_pn_enhanced``.
+     contain** a ``wav/`` subdirectory. The results will be stored in
+     the directories ``wav_pn_enhanced/`` and ``vad/``.
 
 
 ## Details
 
 1. Speech enhancement model
 
-   The scripts accept 16K, 16-bit mono audios. Please convert the
-   audio format in advance. To easily rebuild the waveform, the input
-   feature is log-power spectrum (LPS). As the model has dual outputs
-   including "IRM" and "LPS", the final used component is the "IRM"
-   target which directly applys a mask on the original
-   speech. Compared with "LPS" output, it can yield better speech
-   intelligibility and fewer distortions.
+   The scripts accept 16 kHz, 16-bit monochannel WAV files. Please convert the
+   audio format in advance. To easily rebuild the waveform, the input feature
+   is log-power spectrum (LPS). As the model has dual outputs including "IRM"
+   and "LPS", the final used component is the "IRM" target which directly
+   applies a mask to the original speech. Compared with "LPS" output, it can
+   yield better speech intelligibility and fewer distortions.
 
-2. Vad module
+2. VAD module
 
-   The optional parameters of webrtcvad are aggressiveness mode
-   (default=3) and hop length (default=30). The default settings are
-   tuned on the development set of the first DIHARD challenge.  For
-   the development set, here is the comparison between original speech
+   The optional parameters of WebRTC VAD are aggressiveness mode (default=3)
+   and hop length (default=30 ms). The default settings are tuned on the
+   development set of the [First DIHARD challenge](https://coml.lscp.ens.fr/dihard/2018/index.html).
+   For the development set, here is the comparison between original speech
    and processed speech in terms of VAD metrics:
 
    | VAD(default) | Original_Dev | Processed_Dev |
@@ -138,7 +136,7 @@ Microphone Arrays (HSCMA). IEEE,
    | FA           | 6.12         | 6.17          |
    | Total        | 17.97        | 13.38         |
 
-   And the performance on evaluation set goes to:
+   And the performance on the evaluation set:
 
    | VAD(default) | Original_Eval | Processed_Eval |
    | ------       | ------        | ------         |
@@ -149,9 +147,8 @@ Microphone Arrays (HSCMA). IEEE,
 
 3. Effectiveness
 
-   The effectiveness of a sub-module to the final speaker diarization
-   performance is too trivial to analysis. However, it can be seen
-   clearly that the enhancement based pre-processing is beneficial to
-   at least VAD performance. Users can also tune the default VAD
-   parameters to obtain a desired trade-off between Miss and False
-   Alarm.
+   The contribution of a single sub-module on the final speaker diarization
+   performance is too trivial to analyze. However, it can be seen clearly that
+   the enhancement based pre-processing is beneficial to at least VAD
+   performance. Users can also tune the default VAD parameters to obtain a
+   desired trade-off between Miss and False Alarm rates.

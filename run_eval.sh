@@ -1,30 +1,35 @@
 #!/bin/bash
+# This script demonstrates how to run speech enhancement and VAD. For full documentation,
+# please consult the docstrings of ``main_denoising.py`` and ``main_get_vad.py``.
 
-# The dictionary of converted WAVEFORM of DIHARD (16K, 16bit)
-dihard_wav_dir=/data/wav/
 
-# Specify the output dictionary
-output_dir=/data/wav_pn_enhanced/
+###################################
+# Run speech enhancement
+###################################
+WAV_DIR=/data/wav/  # Directory of WAV files (16 kHz, 16 bit) to enhance.
+SE_WAV_DIR=/data/wav_pn_enhanced  # Output directory for enhanced WAV.
+USE_GPU=true  # Use GPU instead of CPU. To instead use CPU, set to 'false'.
+GPU_DEVICE_ID=0  # Use GPU with device id 0. Irrelevant if using CPU.
+TRUNCATE_MINUTES=10  # Duration in minutes of chunks for enhancement. If you experience
+                     # OOM errors with your GPU, try reducing this.
+python main_denoising.py \
+       --verbose \
+       --wav_dir $WAV_DIR --output_dir $SE_WAV_DIR \
+       --use_gpu $USE_GPU --gpu_id $GPU_DEVICE_ID \
+       --truncate_minutes $TRUNCATE_MINUTES || exit 1
 
-# For GPU with not sufficient memory, long audio sentences should be
-# splitted into sub-audios in case of `out of GPU memory` when
-# decoding LSTM model.
 
-#---- Parameters:
-##### --wav_dir: original wav dictionary. (16K,16bit)
-##### --output_dir: specify the output dictionary
-##### --use_gpu: 'true' or 'false', using GPU on true, if false it will choose CPU
-##### --gpu_id : choose which GPU card to use
-##### --truncate_minutes: how many minutes per chunk. (turn it down when meets GPU memory deficiency )
-GPU_available=true
-python main_denoising.py --wav_dir $dihard_wav_dir --output_dir $output_dir \
-       --use_gpu $GPU_available --gpu_id 0  --truncate_minutes 10 || exit 1
-
-## Get the vad information of all wave file from a specified dictionary
-#---- Parameters:
-##### wav_dir : str, specify a dictionary
-##### mode: int, the vad aggressiveness in webrtcvad
-##### hoplength: int, step size in milli-second.
-python main_get_vad.py --wav_dir $output_dir --mode 3 --hoplength 30 || exit 1
+###################################
+# Perform VAD using enhanced audio
+###################################
+VAD_DIR=/data/vad  # Output directory for label files containing VAD output.
+HOPLENGTH=30  # Duration in milliseconds of frames for VAD. Also controls step size.
+MODE=3  # WebRTC aggressiveness. 0=least agressive and  3=most aggresive.
+NJOBS=1  # Number of parallel processes to use.
+python main_get_vad.py \
+       --verbose \
+       --wav_dir $SE_WAV_DIR --output_dir $VAD_DIR \
+       --mode $MODE --hoplength $HOPLENGTH \
+       --n_jobs $NJOBS || exit 1
 
 exit 0

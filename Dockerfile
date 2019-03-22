@@ -3,7 +3,7 @@
 FROM microsoft/cntk:2.6-gpu-python3.5-cuda9.0-cudnn7.0
 
 # Update the Ubuntu distribution and install some text editors
-RUN apt update && apt upgrade -y && apt install -y nano vim
+RUN apt update && apt upgrade -y && apt install -y nano vim emacs
 
 # Add conda in the PATH and update it to the last version
 ENV PATH=/root/anaconda3/bin:$PATH
@@ -13,7 +13,8 @@ RUN conda update -y -n root -c defaults conda
 RUN conda create --name dihard18 --clone cntk-py35
 RUN bash -c "source activate dihard18 && \
         pip install --upgrade pip && \
-        pip install librosa webrtcvad"
+        pip install librosa webrtcvad && \
+        pip install wurlitzer joblib"
 RUN rm -rf /root/anaconda3/envs/cntk-py35
 
 # Automatically activate the virtual environment when running a docker

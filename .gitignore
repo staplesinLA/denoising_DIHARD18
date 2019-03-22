@@ -1,5 +1,5 @@
 __pycache__/*
-enhanced_norm_fea_mat/*
-temp_normed.lps
-temp_se.wav
-test_normed.scp
+\#*
+*.pyc
+*~
+
