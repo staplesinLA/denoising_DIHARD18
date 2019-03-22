@@ -170,7 +170,9 @@ def main():
         utils.warn('Output directory not specified. Defaulting to "%s"' %
                    args.wav_dir)
         args.output_dir = args.wav_dir
-
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+        
     # Perform VAD.
     def kwargs_gen():
         for wav_file in wav_files:
