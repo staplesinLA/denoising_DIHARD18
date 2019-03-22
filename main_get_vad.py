@@ -59,6 +59,7 @@ from __future__ import unicode_literals
 import argparse
 import os
 import sys
+import traceback
 
 from joblib import delayed, Parallel
 import librosa
@@ -69,6 +70,9 @@ from utils import VALID_VAD_SRS, VALID_VAD_FRAME_LENGTHS, VALID_VAD_MODES
 
 def perform_vad(wav_file, segs_file, speech_label, **kwargs):
     """Perform VAD for WAV file.
+
+    If an exception is raised during processing, it returns the exception as well as
+    the full traceback. Otherwise, returns ``None``.
 
     Parameters
     ----------
@@ -83,12 +87,6 @@ def perform_vad(wav_file, segs_file, speech_label, **kwargs):
 
     kwargs
         Keyword arguments to pass to ``utils.vad``.
-
-    Returns
-    -------
-    e : Exception
-        If an exception is raised during processing, it is returned. Otherwise,
-        returns ``None``.
     """
     try:
         data, fs = librosa.load(wav_file, sr=None)
@@ -97,7 +95,8 @@ def perform_vad(wav_file, segs_file, speech_label, **kwargs):
         utils.write_segments(segs_file, segments, label=speech_label)
         return None
     except Exception as e:
-        return e
+        tb = traceback.format_exc()
+        return e, tb
 
 
 def main():
@@ -130,6 +129,9 @@ def main():
     parser.add_argument(
         '--mode', nargs=None, default=3, type=int, metavar='INT',
         help='WebRTC VAD aggressiveness (default: %(default)s)')
+    parser.add_argument(
+        '--verbose', default=False, action='store_true',
+        help='print full stacktrace for files with errors')
     parser.add_argument(
         '--n_jobs', nargs=None, default=1, type=int, metavar='INT',
         help='number of parallel jobs (default: %(default)s)')
@@ -181,10 +183,14 @@ def main():
                 frame_length=args.frame_length, vad_mode=args.mode)
     f = delayed(perform_vad)
     res = Parallel(n_jobs=args.n_jobs)(f(**kwargs) for kwargs in kwargs_gen())
-    for e, wav_file in zip(res, wav_files):
-        if e is None:
+    for res_, wav_file in zip(res, wav_files):
+        if res_ is None:
             continue
-        utils.error('Problem encountered while processing file "%s". Skipping.' % wav_file)
+        e, tb = res_
+        msg = 'Problem encountered while processing file "%s". Skipping.' % wav_file
+        if args.verbose:
+            msg = '%s Full error output:\n%s' % (msg, tb)
+        utils.error(msg)
 
 
 if __name__ == '__main__':

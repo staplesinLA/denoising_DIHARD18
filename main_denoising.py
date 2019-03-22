@@ -37,7 +37,7 @@ adjusting the flag ``--truncate_minutes``, which controls the length of audio
 chunks processed. Smaller values of ``--truncate_minutes`` will lead to a smaller
 memory footprint. For instance:
 
-   python main_denoising.py --truncate_minutes 10 --use_gpu true --gpu_id 0 -S some.scp --output_dir se_wav_dir/               
+   python main_denoising.py --truncate_minutes 10 --use_gpu true --gpu_id 0 -S some.scp --output_dir se_wav_dir/
 
 will perform enhancement on the GPU using chunks that are 10 minutes in duration. This should use at
 most 8 GB of GPU memory.
@@ -63,7 +63,6 @@ import shutil
 import sys
 import tempfile
 import traceback
-import wave
 
 import numpy as np
 import scipy.io.wavfile as wav_io
@@ -82,7 +81,6 @@ BITDEPTH = 16 # Expected bitdepth of input WAV.
 WL = 512 # Analysis window length in samples for feature extraction.
 WL2 = WL // 2
 NFREQS = 257 # Number of positive frequencies in FFT output.
-
 
 
 class Process(multiprocessing.Process):
@@ -192,15 +190,8 @@ def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
             # be output to the temp directory as irm.mat. In order to avoid a
             # memory leak, must do this in a separate process which we then
             # kill.
-            p = Process(
-                target=decode_model,
-                args=(noisy_normed_lps_scp_fn, tmp_dir, NFREQS, use_gpu,
-                      gpu_id))
-            p.start()
-            p.join()
-            if p.exception:
-                e, tb = p.exception
-                raise e
+            decode_model(noisy_normed_lps_scp_fn, tmp_dir, NFREQS, use_gpu,
+                         gpu_id)
 
             # Read in IRM and directly mask the original LPS features.
             irm = sio.loadmat(irm_fn)['IRM']
@@ -217,7 +208,7 @@ def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
     wav_io.write(dest_wav_file, SR, data_se)
 
 
-def main_denoising(wav_files, output_dir, **kwargs):
+def main_denoising(wav_files, output_dir, verbose=False, **kwargs):
     """Perform speech enhancement for WAV files in ``wav_dir``.
 
     Parameters
@@ -227,6 +218,9 @@ def main_denoising(wav_files, output_dir, **kwargs):
 
     output_dir : str
         Path to output directory for enhanced WAV files.
+
+    verbose : bool, optional
+        If True, print full stacktrace to STDERR for files with errors.
 
     kwargs
         Keyword arguments to pass to ``denoise_wav``.
@@ -242,6 +236,12 @@ def main_denoising(wav_files, output_dir, **kwargs):
     # Perform speech enhancement.
     for src_wav_file in wav_files:
         # Perform basic checks of input WAV.
+        if not os.path.exists(src_wav_file):
+            utils.error('File "%s" does not exist. Skipping.' % src_wav_file)
+            continue
+        if not utils.is_wav(src_wav_file):
+            utils.error('File "%s" is not WAV. Skipping.' % src_wav_file)
+            continue
         if utils.get_sr(src_wav_file) != SR:
             utils.error('Sample rate of file "%s" is not %d Hz. Skipping.' %
                         (src_wav_file, SR))
@@ -258,16 +258,25 @@ def main_denoising(wav_files, output_dir, **kwargs):
         try:
             bn = os.path.basename(src_wav_file)
             dest_wav_file = os.path.join(output_dir, bn)
-            denoise_wav(
-                src_wav_file, dest_wav_file, global_mean, global_var,
-                **kwargs)
+            p = Process(
+                target=denoise_wav,
+                args=(src_wav_file, dest_wav_file, global_mean, global_var),
+                kwargs=kwargs)
+            p.start()
+            p.join()
+            if p.exception:
+                e, tb = p.exception
+                raise type(e)(tb)
             print('Finished processing file "%s".' % src_wav_file)
         except Exception as e:
-            # TODO: log exception plus traceback somewhere.
             msg = 'Problem encountered while processing file "%s". Skipping.' % src_wav_file
+            if verbose:
+                msg = '%s Full error output:\n%s' % (msg, e)
             utils.error(msg)
             continue
 
+
+# TODO: Logging is getting complicated. Consider adding a custom logger...
 def main():
     """Main."""
     parser = argparse.ArgumentParser(
@@ -293,6 +302,9 @@ def main():
         '--truncate_minutes', nargs=None, default=10, type=float,
         metavar='FLOAT',
         help='maximum chunk size in minutes (default: %(default)s)')
+    parser.add_argument(
+        '--verbose', default=False, action='store_true',
+        help='print full stacktrace for files with errors')
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -316,7 +328,7 @@ def main():
 
     # Perform denoising.
     main_denoising(
-        wav_files, args.output_dir, use_gpu=use_gpu, gpu_id=args.gpu_id,
+        wav_files, args.output_dir, args.verbose, use_gpu=use_gpu, gpu_id=args.gpu_id,
         truncate_minutes=args.truncate_minutes)
 
 
