@@ -1,15 +1,14 @@
-# A quick-use package of speech enhancement model in our DIHARD18 system
+# A quick-use package for speech enhancement based on our DIHARD18 system
 
-The repository provides tools to reproduce the enhancement results of
-the speech preprocessing part in our DIHARD18 system[1]. The
-deep-learning based denoising model is trained with 400-hour mixing
-data of both English and Mandarin. The model details can be found in
-[1,2,3]. Currently the tools accept 16K, 16-bit mono audios, please
-convert the audio format in advance.
+The repository provides tools to reproduce the enhancement results of the
+speech preprocessing part in our DIHARD18 system[1]. The deep-learning based
+denoising model is trained on 400 hours of English and Mandarin audio; for full
+details see [1,2,3]. Currently the tools accept 16 kHz, 16-bit monochannel
+WAV files. Please convert the audio format in advance.
 
-Additionally, this package also integrates a VAD module based on
-``py-webrtcvad`` which provides a python interface to the WebRTC Voice
-Activity Detector (VAD). The default parameters are tuned on the
+Additionally, this package integrates a voice activity detection (VAD) module
+based on ``py-webrtcvad``, which provides a Python interface to the
+[WebRTC](https://webrtc.org/) VAD. The default parameters are tuned on the
 development set of DIHARD18.
 
 [1] Sun, Lei, et al. "Speaker Diarization with Enhancing Speech for the
@@ -37,7 +36,7 @@ Microphone Arrays (HSCMA). IEEE,
 * [Wurlitzer] (https://github.com/minrk/wurlitzer)
 * [joblib] (https://github.com/joblib/joblib)
 
-## How to use it ?
+## How to use it?
 
 1. Download the speech enhancement repository :
 
@@ -53,16 +52,15 @@ Microphone Arrays (HSCMA). IEEE,
 	pip install wurlitzer
 	pip install joblib
 	
-   Make sure the CNTK engine installed successfully by querying its
-   version:
+   Make sure the CNTK engine installed successfully by querying its version:
 
         python -c "import cntk; print(cntk.__version__)"
 
-3. Move to the directory :
+3. Move to the directory:
 
         cd ./denoising_DIHARD18
 
-4. Specify parameters in ``run_eval.sh`` :
+4. Specify parameters in ``run_eval.sh``:
 
     * For the speech enhancement tool:
 
@@ -72,9 +70,9 @@ Microphone Arrays (HSCMA). IEEE,
 	    GPU_DEVICE_ID=<GPU device id on your machine, default=0>
 	    TRUNCATE_MINUTES=<audio chunk length in minutes, default=10>
 
-      It's recommended to use a GPU for decoding as it's much faster than CPU.
-      If decoding fails with a ``CUDA Error: out of memory`` error, reduce the value
-      of ``TRUNCATE_MINUTES``.
+      We recommend using a GPU for decoding as it's much faster than CPU.
+      If decoding fails with a ``CUDA Error: out of memory`` error, reduce the
+      value of ``TRUNCATE_MINUTES``.
 
     * For the VAD tool:
 
@@ -83,7 +81,7 @@ Microphone Arrays (HSCMA). IEEE,
 	    MODE=<WebRTC aggressiveness, default=3>
 	    NJOBS=<number of parallel processes, default=1>
 
-5. Execute run_eval.sh :
+5. Execute ``run_eval.sh``:
 
         ./run_eval.sh
 
@@ -121,15 +119,15 @@ Microphone Arrays (HSCMA). IEEE,
    audio format in advance. To easily rebuild the waveform, the input feature
    is log-power spectrum (LPS). As the model has dual outputs including "IRM"
    and "LPS", the final used component is the "IRM" target which directly
-   applies a mask on the original speech. Compared with "LPS" output, it can
+   applies a mask to the original speech. Compared with "LPS" output, it can
    yield better speech intelligibility and fewer distortions.
 
 2. VAD module
 
-   The optional parameters of WebRTC VAD are aggressiveness mode
-   (default=3) and hop length (default=30). The default settings are
-   tuned on the development set of the first DIHARD challenge.  For
-   the development set, here is the comparison between original speech
+   The optional parameters of WebRTC VAD are aggressiveness mode (default=3)
+   and hop length (default=30). The default settings are tuned on the
+   development set of the [First DIHARD challenge](https://coml.lscp.ens.fr/dihard/2018/index.html).
+   For the development set, here is the comparison between original speech
    and processed speech in terms of VAD metrics:
 
    | VAD(default) | Original_Dev | Processed_Dev |
@@ -138,7 +136,7 @@ Microphone Arrays (HSCMA). IEEE,
    | FA           | 6.12         | 6.17          |
    | Total        | 17.97        | 13.38         |
 
-   And the performance on evaluation set goes to:
+   And the performance on evaluation set:
 
    | VAD(default) | Original_Eval | Processed_Eval |
    | ------       | ------        | ------         |
@@ -149,9 +147,8 @@ Microphone Arrays (HSCMA). IEEE,
 
 3. Effectiveness
 
-   The effectiveness of a sub-module to the final speaker diarization
-   performance is too trivial to analysis. However, it can be seen
-   clearly that the enhancement based pre-processing is beneficial to
-   at least VAD performance. Users can also tune the default VAD
-   parameters to obtain a desired trade-off between Miss and False
-   Alarm rates.
+   The contribution of a single sub-module on the final speaker diarization
+   performance is too trivial to analyze. However, it can be seen clearly that
+   the enhancement based pre-processing is beneficial to at least VAD
+   performance. Users can also tune the default VAD parameters to obtain a
+   desired trade-off between Miss and False Alarm rates.
