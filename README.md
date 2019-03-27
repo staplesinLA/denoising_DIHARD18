@@ -1,5 +1,8 @@
 # A quick-use package for speech enhancement based on our DIHARD18 system
+Original founder: @staplesinLA
 
+Major contributor: @nryant (many thanks!)
+			
 The repository provides tools to reproduce the enhancement results of the
 speech preprocessing part of our DIHARD18 system[1]. The deep-learning based
 denoising model is trained on 400 hours of English and Mandarin audio; for full
