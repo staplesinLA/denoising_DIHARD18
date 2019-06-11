@@ -43,6 +43,11 @@ the following flags:
 - ``--mode``  --   the WebRTC aggressiveness mode, which controls how aggressive
   WebRTC is about filter out non-speech; 0 is least aggressive and 3 most aggressive
 
+Optionally, label smoothing may be applied to the output of WebRTC to eliminate short,
+irregular silences and speech segments. Label smoothing is done using a median filter
+applied to the frame-level labeling produced by WebRTC and is controlled by the 
+``--med_filt_width`` parameter.
+
 When processing large batches of audio, it may be desireable to parallelize the
 computation, which may be done by specifying the number of parallel processes to
 employ via the ``--n_jobs`` flag:
@@ -57,6 +62,7 @@ References
 from __future__ import print_function
 from __future__ import unicode_literals
 import argparse
+import numbers
 import os
 import sys
 import traceback
@@ -130,6 +136,10 @@ def main():
         '--mode', nargs=None, default=3, type=int, metavar='INT',
         help='WebRTC VAD aggressiveness (default: %(default)s)')
     parser.add_argument(
+        '--med_filt_width', nargs=None, default=1, type=int, metavar='INT',
+        help='window size in frames for median smoothing of VAD output; '
+             '<=1 disables (default: %(default)s')
+    parser.add_argument(
         '--verbose', default=False, action='store_true',
         help='print full stacktrace for files with errors')
     parser.add_argument(
@@ -155,7 +165,11 @@ def main():
             '--hop_length must be one of %s' % VALID_VAD_FRAME_LENGTHS)
         sys.exit(1)
     if args.mode not in VALID_VAD_MODES:
-        parser.add_argument('--mode must be one of %s' % VALID_VAD_MODES)
+        parser.error('--mode must be one of %s' % VALID_VAD_MODES)
+        sys.exit(1)
+    if (not isinstance(args.med_filt_width, numbers.Integral) or
+        args.med_filt_width % 2 == 0):
+        parser.error('--med_filt_width must be an odd integer')
         sys.exit(1)
     args.frame_length = args.hoplength # Retain hoplength argument for compatibility.
 
@@ -182,7 +196,8 @@ def main():
             yield dict(
                 wav_file=wav_file, segs_file=segs_file,
                 speech_label=args.speech_label, fs_vad=args.fs_vad,
-                frame_length=args.frame_length, vad_mode=args.mode)
+                frame_length=args.frame_length, vad_mode=args.mode,
+                med_filt_width=args.med_filt_width)
     f = delayed(perform_vad)
     res = Parallel(n_jobs=args.n_jobs)(f(**kwargs) for kwargs in kwargs_gen())
     for res_, wav_file in zip(res, wav_files):

@@ -1,6 +1,7 @@
 """Various utility functions."""
 from __future__ import print_function
 from __future__ import unicode_literals
+import numbers
 import os
 import sndhdr
 import struct
@@ -9,6 +10,7 @@ import sys
 import librosa.core
 import librosa.util
 import numpy as np
+import scipy.signal
 import webrtcvad
 
 EPS = 1e-8
@@ -127,7 +129,7 @@ def write_htk(filename, feature, samp_period, parm_kind):
 VALID_VAD_SRS = {8000, 16000, 32000, 48000}
 VALID_VAD_FRAME_LENGTHS = {10, 20, 30}
 VALID_VAD_MODES = {0, 1, 2, 3}
-def vad(data, fs, fs_vad=16000, frame_length=30, vad_mode=0):
+def vad(data, fs, fs_vad=16000, frame_length=30, vad_mode=0, med_filt_width=1):
     """Perform voice activity detection using WebRTC.
 
     VAD is performed by splitting the input into non-overlapping frames
@@ -155,6 +157,12 @@ def vad(data, fs, fs_vad=16000, frame_length=30, vad_mode=0):
         VAD aggressiveness. As ``vad_mode`` increases, it becomes more aggressive
         about filtering out nonspeech.
         (Default: 0)
+
+    med_filt_width : int, optional
+        Window size for median filter used to smooth frame level VAD labels. *MUST*
+        be an odd number. Large values lead to more aggressive smoothing. When
+        <=1, label smoothing is disabled.
+        (Default: 1)
 
     Returns
     -------
@@ -188,6 +196,11 @@ def vad(data, fs, fs_vad=16000, frame_length=30, vad_mode=0):
     data = data.squeeze()
     if not data.ndim == 1:
         raise ValueError('data must be mono (1 ch).')
+    if not isinstance(med_filt_width, numbers.Integral):
+        raise TypeError('med_filt_width must be an odd integer')
+    if med_filt_width % 2 == 0:
+        raise ValueError('med_filt_width must be an odd integer')
+
 
     # Resample.
     if fs != fs_vad:
@@ -197,7 +210,7 @@ def vad(data, fs, fs_vad=16000, frame_length=30, vad_mode=0):
         resampled = data
     resampled = resampled.astype('int16')
 
-    # Convert from millisecons to samples.
+    # Convert from milliseconds to samples.
     def ms_to_samples(t, sr):
         return t*sr // 1000
     frame_length_resamp = ms_to_samples(frame_length, fs_vad)
@@ -216,6 +229,11 @@ def vad(data, fs, fs_vad=16000, frame_length=30, vad_mode=0):
     vad = webrtcvad.Vad()
     vad.set_mode(vad_mode)
     valist = [vad.is_speech(frame.tobytes(), fs_vad) for frame in framed]
+
+    # Smooth labels.
+    if med_filt_width > 1:
+        valist = scipy.signal.medfilt(valist, med_filt_width)
+        valist = valist.astype(np.bool)
 
     # Convert to sample-level labels.
     va_framed = np.zeros((n_frames, frame_length), dtype='uint8')
