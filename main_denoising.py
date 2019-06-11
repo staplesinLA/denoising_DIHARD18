@@ -204,6 +204,7 @@ def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
             data_se.append(wave_recon)
         finally:
             shutil.rmtree(tmp_dir)
+    data_se = [x.astype(np.int16, copy=False) for x in data_se]
     data_se = np.concatenate(data_se)
     wav_io.write(dest_wav_file, SR, data_se)
 
