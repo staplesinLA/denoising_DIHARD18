@@ -190,8 +190,14 @@ def denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, use_gpu,
             # be output to the temp directory as irm.mat. In order to avoid a
             # memory leak, must do this in a separate process which we then
             # kill.
-            decode_model(noisy_normed_lps_scp_fn, tmp_dir, NFREQS, use_gpu,
-                         gpu_id)
+            p = Process(
+                target=decode_model,
+                args=(noisy_normed_lps_scp_fn, tmp_dir, NFREQS, use_gpu, gpu_id))
+            p.start()
+            p.join()
+            if p.exception:
+                e, tb = p.exception
+                raise type(e)(tb)
 
             # Read in IRM and directly mask the original LPS features.
             irm = sio.loadmat(irm_fn)['IRM']
@@ -259,15 +265,7 @@ def main_denoising(wav_files, output_dir, verbose=False, **kwargs):
         try:
             bn = os.path.basename(src_wav_file)
             dest_wav_file = os.path.join(output_dir, bn)
-            p = Process(
-                target=denoise_wav,
-                args=(src_wav_file, dest_wav_file, global_mean, global_var),
-                kwargs=kwargs)
-            p.start()
-            p.join()
-            if p.exception:
-                e, tb = p.exception
-                raise type(e)(tb)
+            denoise_wav(src_wav_file, dest_wav_file, global_mean, global_var, **kwargs)
             print('Finished processing file "%s".' % src_wav_file)
         except Exception as e:
             msg = 'Problem encountered while processing file "%s". Skipping.' % src_wav_file
