@@ -41,13 +41,7 @@ Microphone Arrays (HSCMA). IEEE,
 
 ## How to use it?
 
-1. Download the speech enhancement repository :
-
-        git lfs clone https://github.com/staplesinLA/denoising_DIHARD18.git
-	
-   The pretrained model can also be downloaded [here](https://drive.google.com/file/d/17slCeME1nspsVMixgicV00qC1Jt3DFnr/view?usp=sharing).
-
-2. Install all dependencies (Note that you need to have Python and pip
+1. Install all dependencies (Note that you need to have Python and pip
    already installed on your system) :
 
         sudo apt-get install openmpi-bin
@@ -56,14 +50,19 @@ Microphone Arrays (HSCMA). IEEE,
         pip install webrtcvad
         pip install wurlitzer
         pip install joblib
-	
+
    Make sure the CNTK engine installed successfully by querying its version:
 
         python -c "import cntk; print(cntk.__version__)"
 
-3. Move to the directory:
+2. Download the speech enhancement repository :
 
-        cd ./denoising_DIHARD18
+        git clone https://github.com/staplesinLA/denoising_DIHARD18.git
+	
+3. Install the pretrained model:
+
+        cd denoising_DIHARD18
+	./install_model.sh
 
 4. Specify parameters in ``run_eval.sh``:
 
