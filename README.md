@@ -44,6 +44,8 @@ Microphone Arrays (HSCMA). IEEE,
 1. Download the speech enhancement repository :
 
         git lfs clone https://github.com/staplesinLA/denoising_DIHARD18.git
+	
+   The pretrained model can also be downloaded [here](https://drive.google.com/file/d/17slCeME1nspsVMixgicV00qC1Jt3DFnr/view?usp=sharing).
 
 2. Install all dependencies (Note that you need to have Python and pip
    already installed on your system) :
