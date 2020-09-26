@@ -62,7 +62,7 @@ Microphone Arrays (HSCMA). IEEE,
 3. Install the pretrained model:
 
         cd denoising_DIHARD18
-	./install_model.sh
+        ./install_model.sh
 
 4. Specify parameters in ``run_eval.sh``:
 
